@@ -96,7 +96,8 @@ open class BaseActivity : AppCompatActivity() {
         tapOpens(ChatsActivity::class.java, R.id.btn_messenger)
     }
 
-    private fun switchTab(screen: Class<*>) {
+    /** Switches to another main tab without stacking duplicate tab screens. */
+    protected fun switchTab(screen: Class<*>) {
         val intent = Intent(this, screen).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         startActivity(intent)
         @Suppress("DEPRECATION")
