@@ -9,6 +9,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Kinnect">
 
+        <!-- 01 Splash: launcher, opens Log in automatically -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Kinnect.Teal">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--ACTIVITIES-->
     </application>
 
 </manifest>
