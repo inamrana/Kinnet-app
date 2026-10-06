@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Your profile picture: teal circle with a thick white ring where it overlaps the cover -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/teal" />
+    <stroke android:width="5dp" android:color="@color/white" />
+</shape>
