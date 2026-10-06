@@ -180,6 +180,21 @@
         <item name="android:textColor">@color/teal</item>
     </style>
 
+    <!-- Gender option card: label on the left, radio circle on the right -->
+    <style name="GenderOption">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/bg_option_selector</item>
+        <item name="android:button">@null</item>
+        <item name="android:drawableEnd">@drawable/radio_selector</item>
+        <item name="android:fontFamily">@font/figtree_medium</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:paddingStart">13dp</item>
+        <item name="android:paddingEnd">11dp</item>
+    </style>
+
     <!-- Top tab icon (Home / Friends / Marketplace / Notifications / Menu) -->
     <style name="TopTab">
         <item name="android:layout_width">0dp</item>

@@ -25,6 +25,11 @@
             android:name=".LoginActivity"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- 03 Sign up -->
+        <activity
+            android:name=".SignUpActivity"
+            android:windowSoftInputMode="adjustResize" />
+
         <!--ACTIVITIES-->
     </application>
 
