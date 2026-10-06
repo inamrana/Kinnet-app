@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The five top tabs shared by Home, Friends, Marketplace, Notifications and Menu.
+     BaseActivity.setupTopTabs() tints the current tab teal and shows its underline. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/tab_home"
+            style="@style/TopTab"
+            android:contentDescription="@string/cd_home">
+
+            <ImageView
+                android:id="@+id/tab_home_icon"
+                style="@style/Icon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_home" />
+
+            <View
+                android:id="@+id/tab_home_line"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_gravity="bottom"
+                android:background="@color/teal"
+                android:visibility="invisible" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/tab_friends"
+            style="@style/TopTab"
+            android:contentDescription="@string/cd_friends">
+
+            <ImageView
+                android:id="@+id/tab_friends_icon"
+                style="@style/Icon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_friends" />
+
+            <View
+                android:id="@+id/tab_friends_line"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_gravity="bottom"
+                android:background="@color/teal"
+                android:visibility="invisible" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/tab_market"
+            style="@style/TopTab"
+            android:contentDescription="@string/cd_marketplace">
+
+            <ImageView
+                android:id="@+id/tab_market_icon"
+                style="@style/Icon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_store" />
+
+            <View
+                android:id="@+id/tab_market_line"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_gravity="bottom"
+                android:background="@color/teal"
+                android:visibility="invisible" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/tab_notif"
+            style="@style/TopTab"
+            android:contentDescription="@string/cd_notifications">
+
+            <ImageView
+                android:id="@+id/tab_notif_icon"
+                style="@style/Icon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_bell" />
+
+            <!-- Unread count badge overlapping the bell's top-right -->
+            <TextView
+                style="@style/Text.Bold"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="14dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/bg_badge"
+                android:gravity="center"
+                android:text="5"
+                android:textColor="@color/white"
+                android:textSize="11sp" />
+
+            <View
+                android:id="@+id/tab_notif_line"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_gravity="bottom"
+                android:background="@color/teal"
+                android:visibility="invisible" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/tab_menu"
+            style="@style/TopTab"
+            android:contentDescription="@string/cd_menu">
+
+            <ImageView
+                android:id="@+id/tab_menu_icon"
+                style="@style/Icon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_menu" />
+
+            <View
+                android:id="@+id/tab_menu_line"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_gravity="bottom"
+                android:background="@color/teal"
+                android:visibility="invisible" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <View style="@style/Divider" />
+</LinearLayout>

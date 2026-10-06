@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Demo content that mixes bold and regular text in a single line -->
+<resources>
+    <string name="post_author_line"><b>Lina Marsh</b> is at <b>Clifton Beach</b></string>
+    <string name="post_body">Sunset walk with the crew. Worth every grain of sand in my shoes.</string>
+    <string name="mention_reply"><font color="#0B5F63"><b>@Lina Marsh</b></font> next time invite the rest of us</string>
+    <string name="replying_to">Replying to <b>Aisha Khan</b></string>
+    <string name="friend_requests_title">Friend requests <font color="#C0492C">12</font></string>
+    <string name="profile_friends_count"><b>834</b> friends</string>
+    <string name="other_friends_count"><b>1,204</b> friends · <b>38</b> mutual</string>
+    <string name="mutual_with">Friends with <b>Aisha Khan</b>, <b>Lina Marsh</b> and <b>36 others</b></string>
+    <string name="works_pixellz">Designer at <b>Pixsellz</b></string>
+    <string name="studied_fast">Studied at <b>FAST-NUCES</b></string>
+    <string name="lives_karachi">Lives in <b>Karachi, Pakistan</b></string>
+    <string name="works_nocturne">Photographer at <b>Studio Nocturne</b></string>
+    <string name="notif_reacted"><b>Aisha Khan</b> and <b>32 others</b> reacted to your photo.</string>
+    <string name="notif_request"><b>Sara Iqbal</b> sent you a friend request.</string>
+    <string name="notif_replied"><b>Zain Raza</b> replied to your comment: “next time invite the rest of us”</string>
+    <string name="notif_group">New post in <b>SMD Class of 2026</b>: “Assignment 1 is out. Start early.”</string>
+    <string name="notif_tagged"><b>Hamza Ali</b> tagged you in a post.</string>
+    <string name="notif_liked"><b>Lina Marsh</b> liked your story.</string>
+</resources>

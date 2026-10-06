@@ -30,6 +30,10 @@
             android:name=".SignUpActivity"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- 04 Home feed -->
+        <activity
+            android:name=".HomeActivity" />
+
         <!--ACTIVITIES-->
     </application>
 
