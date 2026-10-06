@@ -1,0 +1,49 @@
+<resources>
+    <!-- Base theme: plain AppCompat so the XML backgrounds are drawn exactly as designed -->
+    <style name="Theme.Kinnect" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/teal</item>
+        <item name="colorPrimaryDark">@color/teal</item>
+        <item name="colorAccent">@color/teal</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:fontFamily">@font/figtree_regular</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="buttonStyle">@style/Widget.Kinnect.Button</item>
+        <item name="android:windowAnimationStyle">@style/Kinnect.ActivityAnimation</item>
+    </style>
+
+    <!-- Dark full-bleed screens: camera, story editor, stories -->
+    <style name="Theme.Kinnect.Dark">
+        <item name="android:windowBackground">@color/dark_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Teal full-bleed screens: splash, voice call -->
+    <style name="Theme.Kinnect.Teal">
+        <item name="android:windowBackground">@color/teal</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Reaction picker fades in over the dimmed post -->
+    <style name="Theme.Kinnect.Overlay">
+        <item name="android:windowAnimationStyle">@style/Kinnect.FadeAnimation</item>
+    </style>
+
+    <!-- Smooth slide transitions between modules -->
+    <style name="Kinnect.ActivityAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/fade_out_slight</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fade_in_slight</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
+
+    <style name="Kinnect.FadeAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/hold</item>
+        <item name="android:activityCloseEnterAnimation">@anim/hold</item>
+        <item name="android:activityCloseExitAnimation">@android:anim/fade_out</item>
+    </style>
+</resources>

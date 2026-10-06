@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Kinnect</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_chats">Chats</string>
+    <string name="cd_more">More options</string>
+    <string name="cd_home">Home</string>
+    <string name="cd_friends">Friends</string>
+    <string name="cd_marketplace">Marketplace</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_photo">Photo</string>
+    <string name="cd_camera">Camera</string>
+    <string name="cd_send">Send</string>
+    <string name="cd_call">Voice call</string>
+    <string name="cd_video_call">Video call</string>
+    <string name="cd_info">Info</string>
+    <string name="cd_shutter">Take photo</string>
+    <string name="cd_share_story">Share to your story</string>
+    <string name="cd_end_call">End call</string>
+    <string name="cd_show_password">Show password</string>
+</resources>

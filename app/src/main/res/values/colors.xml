@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <color name="teal">#0B5F63</color>
+    <color name="teal_dark">#084A4D</color>
+    <color name="teal_light">#E1EEEE</color>
+
+    <!-- Surfaces -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="bg_warm">#F3F1ED</color>
+    <color name="surface_pill">#ECE9E4</color>
+    <color name="divider">#E2DFDA</color>
+    <color name="divider_thick">#E6E3DE</color>
+    <color name="input_stroke">#DAD6D0</color>
+    <color name="dark_bg">#121212</color>
+    <color name="dark_pill">#2A2A28</color>
+    <color name="scrim">#8C8A8A8A</color>
+    <color name="glass">#59FFFFFF</color>
+    <color name="glass_dark">#66303A2C</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1C1B1A</color>
+    <color name="text_secondary">#5F5D5A</color>
+    <color name="text_hint">#8A8783</color>
+
+    <!-- Accents -->
+    <color name="badge_red">#C0492C</color>
+    <color name="love_red">#D63C4F</color>
+    <color name="gold">#CC8A12</color>
+    <color name="online_green">#31A24C</color>
+    <color name="call_red">#C62828</color>
+
+    <!-- Avatar colours -->
+    <color name="av_purple">#7B4F80</color>
+    <color name="av_crimson">#9E3D4E</color>
+    <color name="av_green">#2F6B4C</color>
+    <color name="av_indigo">#4D5293</color>
+    <color name="av_brown">#8B5A2B</color>
+    <color name="av_steel">#3F6E8E</color>
+    <color name="av_olive">#6B5E2E</color>
+
+    <!-- Text-post colour swatches -->
+    <color name="sw_orange">#BF4B2B</color>
+    <color name="sw_black">#1C1B1A</color>
+</resources>

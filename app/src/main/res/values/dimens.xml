@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="screen_margin">16dp</dimen>
+    <dimen name="avatar_sm">28dp</dimen>
+    <dimen name="avatar_md">40dp</dimen>
+    <dimen name="avatar_lg">52dp</dimen>
+    <dimen name="icon">24dp</dimen>
+    <dimen name="round_button">38dp</dimen>
+    <dimen name="button_height">46dp</dimen>
+    <dimen name="feed_grid_height">260dp</dimen>
+    <!-- Content column is capped on tablets so the phone design stays readable -->
+    <dimen name="content_max_width">600dp</dimen>
+</resources>
