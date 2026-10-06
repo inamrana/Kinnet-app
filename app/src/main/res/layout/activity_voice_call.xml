@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 22 · Voice call: encrypted label, rounded avatar with halo rings, name, timer and call controls -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/call_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/teal"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="34dp"
+        android:alpha="0.85"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            style="@style/Icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_lock"
+            android:tint="@color/white" />
+
+        <TextView
+            style="@style/Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:letterSpacing="0.03"
+            android:text="End-to-end encrypted"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <Space
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Avatar inside two soft halo rings -->
+    <FrameLayout
+        android:layout_width="200dp"
+        android:layout_height="200dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_call_halo1" />
+
+        <View
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_call_halo2" />
+
+        <TextView
+            style="@style/Avatar"
+            android:layout_width="156dp"
+            android:layout_height="156dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_call_avatar"
+            android:backgroundTint="@color/av_purple"
+            android:text="AM"
+            android:textSize="54sp" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/Text.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ammi"
+            android:textColor="@color/white"
+            android:textSize="30sp" />
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_circle"
+            android:importantForAccessibility="no"
+            android:padding="2dp"
+            android:src="@drawable/react_love" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:alpha="0.9"
+        android:text="03:12"
+        android:textColor="@color/white"
+        android:textSize="17sp" />
+
+    <Space
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:layout_weight="1.3" />
+
+    <!-- Controls: notes, mute, end call, speaker -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="54dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_call_btn"
+            android:contentDescription="Call notes"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="16dp"
+            android:src="@drawable/ic_notes"
+            android:tint="@color/white" />
+
+        <Space
+            android:layout_width="22dp"
+            android:layout_height="1dp" />
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_call_btn"
+            android:contentDescription="Mute"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="16dp"
+            android:src="@drawable/ic_mic"
+            android:tint="@color/white" />
+
+        <Space
+            android:layout_width="22dp"
+            android:layout_height="1dp" />
+
+        <!-- Red end-call button; only the handset icon is rotated -->
+        <FrameLayout
+            android:id="@+id/btn_end_call"
+            android:layout_width="78dp"
+            android:layout_height="78dp"
+            android:background="@drawable/bg_end_call"
+            android:clickable="true"
+            android:contentDescription="@string/cd_end_call"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                style="@style/Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:rotation="135"
+                android:src="@drawable/ic_phone"
+                android:tint="@color/white" />
+        </FrameLayout>
+
+        <Space
+            android:layout_width="22dp"
+            android:layout_height="1dp" />
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_call_btn"
+            android:contentDescription="Speaker"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="16dp"
+            android:src="@drawable/ic_speaker"
+            android:tint="@color/white" />
+    </LinearLayout>
+</LinearLayout>
