@@ -53,6 +53,27 @@
         <activity
             android:name=".PhotoPickerActivity" />
 
+        <!-- 09 Camera -->
+        <activity
+            android:name=".CameraActivity"
+            android:theme="@style/Theme.Kinnect.Dark" />
+
+        <!-- 10 Story editor -->
+        <activity
+            android:name=".StoryEditorActivity"
+            android:theme="@style/Theme.Kinnect.Dark" />
+
+        <!-- 11 Story viewer -->
+        <activity
+            android:name=".StoryViewerActivity"
+            android:theme="@style/Theme.Kinnect.Dark"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 12 Your story -->
+        <activity
+            android:name=".YourStoryActivity"
+            android:theme="@style/Theme.Kinnect.Dark" />
+
         <!--ACTIVITIES-->
     </application>
 

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 09 · Camera: live preview card with capture controls and the mode selector -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/camera_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_bg"
+    android:orientation="vertical"
+    android:paddingStart="8dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="8dp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/dark_pill"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@drawable/scene_green_tall" />
+
+        <ImageView
+            android:id="@+id/btn_settings"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="top|start"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="@color/glass_dark"
+            android:contentDescription="Camera settings"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="11dp"
+            android:src="@drawable/ic_settings"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btn_close"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="@color/glass_dark"
+            android:contentDescription="@string/cd_close"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="11dp"
+            android:src="@drawable/ic_close"
+            android:tint="@color/white" />
+
+        <!-- Capture controls: gallery, flash, shutter, flip, effects -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp">
+
+            <ImageView
+                android:id="@+id/btn_gallery"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_rounded_8"
+                android:contentDescription="Gallery"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/scene_teal" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/btn_flash"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/glass_dark"
+                android:contentDescription="Flash"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="11dp"
+                android:src="@drawable/ic_flash"
+                android:tint="@color/white" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Shutter: translucent ring around a white disc -->
+            <FrameLayout
+                android:id="@+id/btn_shutter"
+                android:layout_width="78dp"
+                android:layout_height="78dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="#73FFFFFF"
+                android:contentDescription="@string/cd_shutter"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <View
+                    android:layout_width="62dp"
+                    android:layout_height="62dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_circle" />
+            </FrameLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/btn_flip"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/glass_dark"
+                android:contentDescription="Flip camera"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="11dp"
+                android:src="@drawable/ic_flip"
+                android:tint="@color/white" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <ImageView
+                    android:id="@+id/btn_effects"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="bottom|start"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/glass_dark"
+                    android:contentDescription="Effects"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="11dp"
+                    android:src="@drawable/ic_smile"
+                    android:tint="@color/white" />
+
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="top|end"
+                    android:background="@drawable/bg_badge" />
+            </FrameLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Capture modes, STORY selected -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="top"
+            android:orientation="horizontal"
+            android:paddingTop="30dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Text.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:letterSpacing="0.08"
+                    android:text="TEXT"
+                    android:textColor="#B3B0AA"
+                    android:textSize="14sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Text.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:letterSpacing="0.08"
+                    android:text="LIVE"
+                    android:textColor="#B3B0AA"
+                    android:textSize="14sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Text.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:letterSpacing="0.08"
+                    android:text="STORY"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="7dp"
+                    android:background="@color/white" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Text.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:letterSpacing="0.08"
+                    android:text="POST"
+                    android:textColor="#B3B0AA"
+                    android:textSize="14sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Text.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:letterSpacing="0.08"
+                    android:text="BOOMERANG"
+                    android:textColor="#B3B0AA"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+</LinearLayout>

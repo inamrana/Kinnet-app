@@ -244,6 +244,14 @@
         <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
     </style>
 
+    <!-- Quick reaction next to the story reply box -->
+    <style name="StoryReaction">
+        <item name="android:layout_width">42dp</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+    </style>
+
     <!-- Top tab icon (Home / Friends / Marketplace / Notifications / Menu) -->
     <style name="TopTab">
         <item name="android:layout_width">0dp</item>
