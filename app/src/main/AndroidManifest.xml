@@ -44,6 +44,15 @@
             android:name=".CommentsActivity"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- 07 Create post -->
+        <activity
+            android:name=".CreatePostActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 08 Photo picker -->
+        <activity
+            android:name=".PhotoPickerActivity" />
+
         <!--ACTIVITIES-->
     </application>
 
