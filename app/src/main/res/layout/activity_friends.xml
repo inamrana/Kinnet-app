@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 14 · Friends: requests with Confirm / Delete and suggestions -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/friends_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="58dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            style="@style/Text.Display"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Friends"
+            android:textSize="30sp" />
+
+        <include layout="@layout/view_header_actions" />
+    </LinearLayout>
+
+    <include layout="@layout/view_top_tabs" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Chip"
+                    android:text="Suggestions" />
+
+                <TextView
+                    style="@style/Chip"
+                    android:layout_marginStart="8dp"
+                    android:text="Your friends" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Text.Section"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/friend_requests_title"
+                    android:textSize="21sp" />
+
+                <TextView
+                    style="@style/Text.Link"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="See all"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/request_sara"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:backgroundTint="@color/av_indigo"
+                    android:text="SI"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Text.Bold"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Sara Iqbal"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            style="@style/Text.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3d" />
+                    </LinearLayout>
+
+                    <!-- Mutual friends: two small overlapping avatars -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_indigo" />
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="-8dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_brown" />
+
+                        <TextView
+                            style="@style/Text.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="8 mutual friends" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="9dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            style="@style/Button.PrimarySquare"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Confirm" />
+
+                        <Button
+                            style="@style/Button.Grey"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="Delete" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/request_bilal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:backgroundTint="@color/av_purple"
+                    android:text="BA"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Text.Bold"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Bilal Ahmed"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            style="@style/Text.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1w" />
+                    </LinearLayout>
+
+                    <!-- Mutual friends: two small overlapping avatars -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_indigo" />
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="-8dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_brown" />
+
+                        <TextView
+                            style="@style/Text.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="14 mutual friends" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="9dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            style="@style/Button.PrimarySquare"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Confirm" />
+
+                        <Button
+                            style="@style/Button.Grey"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="Delete" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/request_noor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:backgroundTint="@color/av_green"
+                    android:text="NF"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Text.Bold"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Noor Fatima"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            style="@style/Text.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2w" />
+                    </LinearLayout>
+
+                    <!-- Mutual friends: two small overlapping avatars -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_indigo" />
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="-8dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_brown" />
+
+                        <TextView
+                            style="@style/Text.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="3 mutual friends" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="9dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            style="@style/Button.PrimarySquare"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Confirm" />
+
+                        <Button
+                            style="@style/Button.Grey"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="Delete" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/request_daniyal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:backgroundTint="@color/av_crimson"
+                    android:text="DS"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Text.Bold"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Daniyal Shah"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            style="@style/Text.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3w" />
+                    </LinearLayout>
+
+                    <!-- Mutual friends: two small overlapping avatars -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_indigo" />
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="-8dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/av_brown" />
+
+                        <TextView
+                            style="@style/Text.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="21 mutual friends" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="9dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            style="@style/Button.PrimarySquare"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Confirm" />
+
+                        <Button
+                            style="@style/Button.Grey"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="Delete" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                style="@style/Divider"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp" />
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="People you may know"
+                android:textSize="21sp" />
+
+            <LinearLayout
+                android:id="@+id/suggest_omar_siddiqui"
+                android:layout_width="match_parent"
+                android:layout_height="68dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:backgroundTint="@color/av_indigo"
+                    android:text="OS"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text.Bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Omar Siddiqui"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        style="@style/Text.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="12 mutual friends · FAST-NUCES" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/teal_light"
+                    android:contentDescription="Add Omar Siddiqui"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_person_add"
+                    android:tint="@color/teal" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/suggest_maya"
+                android:layout_width="match_parent"
+                android:layout_height="68dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:backgroundTint="@color/av_olive"
+                    android:text="MC"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text.Bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Maya Chen"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        style="@style/Text.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="5 mutual friends" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/teal_light"
+                    android:contentDescription="Add Maya Chen"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_person_add"
+                    android:tint="@color/teal" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
