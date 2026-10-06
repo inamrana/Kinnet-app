@@ -20,6 +20,11 @@
             </intent-filter>
         </activity>
 
+        <!-- 02 Log in -->
+        <activity
+            android:name=".LoginActivity"
+            android:windowSoftInputMode="adjustResize" />
+
         <!--ACTIVITIES-->
     </application>
 
