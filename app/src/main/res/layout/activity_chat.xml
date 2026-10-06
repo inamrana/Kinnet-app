@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 21 · Chat with Aisha: header with call buttons, message thread, typing indicator, composer -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/chat_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            style="@style/Icon.Touch"
+            android:contentDescription="@string/cd_back"
+            android:src="@drawable/ic_back"
+            android:tint="@color/teal" />
+
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="6dp">
+
+            <TextView
+                style="@style/Avatar"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:backgroundTint="@color/av_crimson"
+                android:text="AK"
+                android:textSize="15sp" />
+
+            <View
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_online_dot" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Text.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aisha Khan"
+                android:textSize="17sp" />
+
+            <TextView
+                style="@style/Text.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Active now" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_call"
+            style="@style/Icon.Touch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/cd_call"
+            android:padding="10dp"
+            android:src="@drawable/ic_phone"
+            android:tint="@color/teal" />
+
+        <ImageView
+            android:id="@+id/btn_video"
+            style="@style/Icon.Touch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/cd_video_call"
+            android:padding="10dp"
+            android:src="@drawable/ic_video"
+            android:tint="@color/teal" />
+
+        <ImageView
+            android:id="@+id/btn_info"
+            style="@style/Icon.Touch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/cd_info"
+            android:padding="10dp"
+            android:src="@drawable/ic_info"
+            android:tint="@color/teal" />
+    </LinearLayout>
+
+    <View style="@style/Divider" />
+
+    <ScrollView
+        android:id="@+id/chat_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="12dp">
+
+            <!-- Conversation intro -->
+            <TextView
+                style="@style/Avatar"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:backgroundTint="@color/av_crimson"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="22dp"
+                android:text="AK"
+                android:textSize="32sp" />
+
+            <TextView
+                style="@style/Text.Display"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:text="Aisha Khan"
+                android:textSize="25sp" />
+
+            <TextView
+                style="@style/Text.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="You're friends on Kinnect · Lives in Karachi" />
+
+            <TextView
+                style="@style/Text.SemiBold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.04"
+                android:text="TODAY 4:49 PM"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="bottom"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="24dp">
+
+                <Space
+                    android:layout_width="30dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    style="@style/ChatBubble.In"
+                    android:text="Hey! Are you still coming Saturday?" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="bottom"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="24dp">
+
+                <Space
+                    android:layout_width="30dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    style="@style/ChatBubble.In"
+                    android:text="Lina booked the table for 8" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="bottom"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="24dp">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:backgroundTint="@color/av_crimson"
+                    android:text="AK"
+                    android:textSize="10sp" />
+
+                <TextView
+                    style="@style/ChatBubble.In"
+                    android:text="Bring the camera" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/ChatBubble.Out"
+                android:layout_gravity="end"
+                android:layout_marginStart="60dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginEnd="12dp"
+                android:text="Yes, obviously" />
+
+            <!-- Outgoing message with a love reaction overlapping its bottom-left corner -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="3dp"
+                android:layout_marginEnd="12dp">
+
+                <TextView
+                    style="@style/ChatBubble.Out"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="Already charged both batteries" />
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="bottom|start"
+                    android:background="@drawable/bg_circle"
+                    android:elevation="2dp"
+                    android:importantForAccessibility="no"
+                    android:padding="3dp"
+                    android:src="@drawable/react_love" />
+            </FrameLayout>
+
+            <TextView
+                style="@style/Text.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="12dp"
+                android:text="You replied to Aisha"
+                android:textSize="13sp" />
+
+            <!-- Quoted message the reply refers to -->
+            <TextView
+                style="@style/ChatBubble.In"
+                android:layout_gravity="end"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="12dp"
+                android:alpha="0.85"
+                android:text="Lina booked the table for 8"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp" />
+
+            <TextView
+                style="@style/ChatBubble.Out"
+                android:layout_gravity="end"
+                android:layout_marginStart="60dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="12dp"
+                android:text="Perfect, I'll be there by 7:45" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="200dp"
+                android:layout_height="140dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="12dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Shared photo"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/scene_lavender" />
+            </androidx.cardview.widget.CardView>
+
+            <!-- Seen by Aisha -->
+            <View
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="6dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/av_crimson" />
+
+            <!-- Typing indicator -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Avatar"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:backgroundTint="@color/av_crimson"
+                    android:text="AK"
+                    android:textSize="10sp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_bubble"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp">
+
+                    <View style="@style/TypingDot" android:alpha="0.9" />
+
+                    <View style="@style/TypingDot" android:alpha="0.6" />
+
+                    <View style="@style/TypingDot" android:alpha="0.35" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Composer -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            style="@style/Icon.Touch"
+            android:contentDescription="More"
+            android:src="@drawable/ic_plus_circle"
+            android:tint="@color/teal" />
+
+        <ImageView
+            style="@style/Icon.Touch"
+            android:contentDescription="@string/cd_camera"
+            android:src="@drawable/ic_camera"
+            android:tint="@color/teal" />
+
+        <ImageView
+            style="@style/Icon.Touch"
+            android:contentDescription="@string/cd_photo"
+            android:src="@drawable/ic_image"
+            android:tint="@color/teal" />
+
+        <ImageView
+            style="@style/Icon.Touch"
+            android:contentDescription="Voice message"
+            android:src="@drawable/ic_mic"
+            android:tint="@color/teal" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_pill"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="10dp">
+
+            <EditText
+                android:id="@+id/input_message"
+                style="@style/InputField"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:hint="Aa"
+                android:importantForAutofill="no"
+                android:inputType="textCapSentences"
+                android:paddingTop="0dp" />
+
+            <ImageView
+                style="@style/Icon"
+                android:src="@drawable/ic_smile"
+                android:tint="@color/teal" />
+        </LinearLayout>
+
+        <ImageView
+            style="@style/Icon.Touch"
+            android:contentDescription="Send a like"
+            android:src="@drawable/ic_like"
+            android:tint="@color/teal" />
+    </LinearLayout>
+</LinearLayout>
