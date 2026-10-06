@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 18 · Notifications: grouped New / Earlier with type badges -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/notifications_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="58dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            style="@style/Text.Display"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Notifications"
+            android:textSize="30sp" />
+
+        <include layout="@layout/view_header_actions" />
+    </LinearLayout>
+
+    <include layout="@layout/view_top_tabs" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="New" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/teal_light"
+                android:orientation="vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="8dp">
+
+                <LinearLayout
+                    android:id="@+id/notif_reaction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="9dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="9dp">
+
+                    <!-- Avatar with the notification type badge overlapping its corner -->
+                    <FrameLayout
+                        android:layout_width="66dp"
+                        android:layout_height="66dp">
+
+                        <TextView
+                            style="@style/Avatar"
+                            android:layout_width="62dp"
+                            android:layout_height="62dp"
+                            android:backgroundTint="@color/av_crimson"
+                            android:text="AK"
+                            android:textSize="22sp" />
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="bottom|end"
+                            android:background="@drawable/bg_circle"
+                            android:importantForAccessibility="no"
+                            android:padding="2dp"
+                            android:src="@drawable/react_love" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:lineSpacingExtra="4dp"
+                            android:text="@string/notif_reacted"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            style="@style/Text.Bold"
+                        android:textColor="@color/teal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="5m"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        style="@style/Icon.Touch"
+                        android:contentDescription="@string/cd_more"
+                        android:src="@drawable/ic_more"
+                        android:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/notif_friend_request"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="9dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="9dp">
+
+                    <!-- Avatar with the notification type badge overlapping its corner -->
+                    <FrameLayout
+                        android:layout_width="66dp"
+                        android:layout_height="66dp">
+
+                        <TextView
+                            style="@style/Avatar"
+                            android:layout_width="62dp"
+                            android:layout_height="62dp"
+                            android:backgroundTint="@color/av_indigo"
+                            android:text="SI"
+                            android:textSize="22sp" />
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="bottom|end"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="@color/teal"
+                            android:foreground="@drawable/bg_white_ring_thick"
+                            android:importantForAccessibility="no"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_person"
+                            android:tint="@color/white" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:lineSpacingExtra="4dp"
+                            android:text="@string/notif_request"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            style="@style/Text.Bold"
+                        android:textColor="@color/teal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="20m"
+                            android:textSize="14sp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="38dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginEnd="40dp"
+                            android:orientation="horizontal">
+
+                            <Button
+                                style="@style/Button.PrimarySquare"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:text="Confirm" />
+
+                            <Button
+                                style="@style/Button.Grey"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:text="Delete" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <ImageView
+                        style="@style/Icon.Touch"
+                        android:contentDescription="@string/cd_more"
+                        android:src="@drawable/ic_more"
+                        android:tint="@color/text_secondary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="Earlier" />
+
+            <LinearLayout
+                android:id="@+id/notif_reply"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="9dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="9dp">
+
+                <!-- Avatar with the notification type badge overlapping its corner -->
+                <FrameLayout
+                    android:layout_width="66dp"
+                    android:layout_height="66dp">
+
+                    <TextView
+                        style="@style/Avatar"
+                        android:layout_width="62dp"
+                        android:layout_height="62dp"
+                        android:backgroundTint="@color/av_steel"
+                        android:text="ZR"
+                        android:textSize="22sp" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="@color/av_green"
+                        android:foreground="@drawable/bg_white_ring_thick"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_comment"
+                        android:tint="@color/white" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/notif_replied"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        style="@style/Text.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="2h"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <ImageView
+                    style="@style/Icon.Touch"
+                    android:contentDescription="@string/cd_more"
+                    android:src="@drawable/ic_more"
+                    android:tint="@color/text_secondary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/notif_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="9dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="9dp">
+
+                <!-- Avatar with the notification type badge overlapping its corner -->
+                <FrameLayout
+                    android:layout_width="66dp"
+                    android:layout_height="66dp">
+
+                    <TextView
+                        style="@style/Avatar"
+                        android:layout_width="62dp"
+                        android:layout_height="62dp"
+                        android:backgroundTint="@color/av_olive"
+                        android:text="DC"
+                        android:textSize="22sp" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="@color/av_indigo"
+                        android:foreground="@drawable/bg_white_ring_thick"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_friends"
+                        android:tint="@color/white" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/notif_group"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        style="@style/Text.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="5h"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <ImageView
+                    style="@style/Icon.Touch"
+                    android:contentDescription="@string/cd_more"
+                    android:src="@drawable/ic_more"
+                    android:tint="@color/text_secondary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/notif_tag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="9dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="9dp">
+
+                <!-- Avatar with the notification type badge overlapping its corner -->
+                <FrameLayout
+                    android:layout_width="66dp"
+                    android:layout_height="66dp">
+
+                    <TextView
+                        style="@style/Avatar"
+                        android:layout_width="62dp"
+                        android:layout_height="62dp"
+                        android:backgroundTint="@color/av_brown"
+                        android:text="HA"
+                        android:textSize="22sp" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="@color/gold"
+                        android:foreground="@drawable/bg_white_ring_thick"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_tag"
+                        android:tint="@color/white" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/notif_tagged"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        style="@style/Text.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="Yesterday"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <ImageView
+                    style="@style/Icon.Touch"
+                    android:contentDescription="@string/cd_more"
+                    android:src="@drawable/ic_more"
+                    android:tint="@color/text_secondary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/notif_like"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="9dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="9dp">
+
+                <!-- Avatar with the notification type badge overlapping its corner -->
+                <FrameLayout
+                    android:layout_width="66dp"
+                    android:layout_height="66dp">
+
+                    <TextView
+                        style="@style/Avatar"
+                        android:layout_width="62dp"
+                        android:layout_height="62dp"
+                        android:backgroundTint="@color/av_purple"
+                        android:text="LM"
+                        android:textSize="22sp" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="@color/teal"
+                        android:foreground="@drawable/bg_white_ring_thick"
+                        android:importantForAccessibility="no"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_like"
+                        android:tint="@color/white" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/notif_liked"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        style="@style/Text.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="2d"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <ImageView
+                    style="@style/Icon.Touch"
+                    android:contentDescription="@string/cd_more"
+                    android:src="@drawable/ic_more"
+                    android:tint="@color/text_secondary" />
+            </LinearLayout>
+
+            <Button
+                style="@style/Button.Grey"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="16dp"
+                android:text="See previous notifications" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

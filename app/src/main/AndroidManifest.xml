@@ -95,6 +95,32 @@
         <activity
             android:name=".OtherProfileActivity" />
 
+        <!-- 18 Notifications tab -->
+        <activity
+            android:name=".NotificationsActivity" />
+
+        <!-- 19 Menu tab -->
+        <activity
+            android:name=".MenuActivity" />
+
+        <!-- 20 Chats -->
+        <activity
+            android:name=".ChatsActivity" />
+
+        <!-- 21 Chat -->
+        <activity
+            android:name=".ChatActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 22 Voice call -->
+        <activity
+            android:name=".VoiceCallActivity"
+            android:theme="@style/Theme.Kinnect.Teal" />
+
+        <!-- 23 Marketplace tab -->
+        <activity
+            android:name=".MarketplaceActivity" />
+
         <!--ACTIVITIES-->
     </application>
 
