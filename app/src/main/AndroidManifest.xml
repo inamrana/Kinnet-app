@@ -74,6 +74,27 @@
             android:name=".YourStoryActivity"
             android:theme="@style/Theme.Kinnect.Dark" />
 
+        <!-- 13 Search -->
+        <activity
+            android:name=".SearchActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 14 Friends tab -->
+        <activity
+            android:name=".FriendsActivity" />
+
+        <!-- 15 Profile -->
+        <activity
+            android:name=".ProfileActivity" />
+
+        <!-- 16 Edit profile -->
+        <activity
+            android:name=".EditProfileActivity" />
+
+        <!-- 17 Other profile -->
+        <activity
+            android:name=".OtherProfileActivity" />
+
         <!--ACTIVITIES-->
     </application>
 
