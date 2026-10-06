@@ -34,6 +34,11 @@
         <activity
             android:name=".HomeActivity" />
 
+        <!-- 05 Reaction picker -->
+        <activity
+            android:name=".ReactionPickerActivity"
+            android:theme="@style/Theme.Kinnect.Overlay" />
+
         <!--ACTIVITIES-->
     </application>
 

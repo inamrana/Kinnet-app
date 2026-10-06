@@ -15,7 +15,7 @@
     <color name="input_stroke">#DAD6D0</color>
     <color name="dark_bg">#121212</color>
     <color name="dark_pill">#2A2A28</color>
-    <color name="scrim">#8C8A8A8A</color>
+    <color name="scrim">#4D000000</color>
     <color name="glass">#59FFFFFF</color>
     <color name="glass_dark">#66303A2C</color>
 

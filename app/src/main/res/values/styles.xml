@@ -236,6 +236,14 @@
         <item name="android:textSize">13sp</item>
     </style>
 
+    <!-- One emoji in the reaction picker bar -->
+    <style name="ReactionIcon">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:layout_marginStart">6dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+    </style>
+
     <!-- Top tab icon (Home / Friends / Marketplace / Notifications / Menu) -->
     <style name="TopTab">
         <item name="android:layout_width">0dp</item>
