@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reply connector: a line coming down from the parent comment and curving right into the reply avatar -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="52dp"
+    android:viewportWidth="28"
+    android:viewportHeight="52">
+    <path
+        android:pathData="M1,0 V36 Q1,44 9,44 H27"
+        android:strokeColor="#CFCAC3"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round" />
+</vector>

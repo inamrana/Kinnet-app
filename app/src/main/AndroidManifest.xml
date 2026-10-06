@@ -39,6 +39,11 @@
             android:name=".ReactionPickerActivity"
             android:theme="@style/Theme.Kinnect.Overlay" />
 
+        <!-- 06 Comments -->
+        <activity
+            android:name=".CommentsActivity"
+            android:windowSoftInputMode="adjustResize" />
+
         <!--ACTIVITIES-->
     </application>
 
