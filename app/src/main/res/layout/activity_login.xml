@@ -56,6 +56,7 @@
         </FrameLayout>
 
         <TextView
+            android:id="@+id/recent_login_label"
             style="@style/Text.Bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -86,6 +87,7 @@
                 android:layout_height="62dp">
 
                 <TextView
+                    android:id="@+id/recent_avatar"
                     style="@style/Avatar"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
@@ -94,6 +96,7 @@
                     android:textSize="18sp" />
 
                 <TextView
+                    android:id="@+id/recent_badge"
                     style="@style/Text.Bold"
                     android:layout_width="22dp"
                     android:layout_height="22dp"
@@ -113,6 +116,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/recent_name"
                     style="@style/Text.Bold"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -149,8 +153,7 @@
                 style="@style/InputField"
                 android:autofillHints="emailAddress"
                 android:hint="Mobile number or email"
-                android:inputType="textEmailAddress"
-                android:text="jacob.west@mail.com" />
+                android:inputType="textEmailAddress" />
         </LinearLayout>
 
         <!-- Password with show/hide eye -->
@@ -181,11 +184,11 @@
                     style="@style/InputField"
                     android:autofillHints="password"
                     android:hint="Password"
-                    android:inputType="textPassword"
-                    android:text="kinnect2026" />
+                    android:inputType="textPassword" />
             </LinearLayout>
 
             <ImageView
+                android:id="@+id/btn_toggle_password"
                 style="@style/Icon.Touch"
                 android:contentDescription="@string/cd_show_password"
                 android:src="@drawable/ic_eye"

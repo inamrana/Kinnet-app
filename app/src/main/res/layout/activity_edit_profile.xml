@@ -25,6 +25,7 @@
             android:textSize="16sp" />
 
         <TextView
+            android:id="@+id/edit_profile_title"
             style="@style/Text.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -81,6 +82,7 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/edit_avatar"
                 style="@style/Avatar"
                 android:layout_width="112dp"
                 android:layout_height="112dp"
@@ -162,13 +164,19 @@
                     android:text="Name"
                     android:textSize="16sp" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/input_name"
                     style="@style/Text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Jacob West"
+                    android:background="@null"
+                    android:hint="Name"
+                    android:importantForAutofill="no"
+                    android:inputType="textPersonName|textCapWords"
+                    android:padding="0dp"
                     android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
                     android:textSize="17sp" />
             </LinearLayout>
 
@@ -192,13 +200,19 @@
                     android:text="Username"
                     android:textSize="16sp" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/input_username"
                     style="@style/Text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="jacob.west"
+                    android:background="@null"
+                    android:hint="Username"
+                    android:importantForAutofill="no"
+                    android:inputType="textNoSuggestions"
+                    android:padding="0dp"
                     android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
                     android:textSize="17sp" />
             </LinearLayout>
 
@@ -222,13 +236,19 @@
                     android:text="Website"
                     android:textSize="16sp" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/input_website"
                     style="@style/Text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Website"
-                    android:textColor="@color/text_hint"
+                    android:background="@null"
+                    android:hint="Website"
+                    android:importantForAutofill="no"
+                    android:inputType="textUri"
+                    android:padding="0dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
                     android:textSize="17sp" />
             </LinearLayout>
 
@@ -252,13 +272,20 @@
                     android:text="Bio"
                     android:textSize="16sp" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/input_bio"
                     style="@style/Text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Digital goodies designer."
+                    android:background="@null"
+                    android:hint="Bio"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences"
+                    android:maxLength="101"
+                    android:padding="0dp"
                     android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
                     android:textSize="17sp" />
             </LinearLayout>
 
@@ -306,6 +333,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:id="@+id/value_email"
                     android:text="jacob.west@mail.com"
                     android:textColor="@color/text_primary"
                     android:textSize="17sp" />
@@ -336,6 +364,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:id="@+id/value_phone"
                     android:text="+92 300 1234567"
                     android:textColor="@color/text_primary"
                     android:textSize="17sp" />
@@ -366,6 +395,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:id="@+id/value_gender"
                     android:text="Male"
                     android:textColor="@color/text_primary"
                     android:textSize="17sp" />

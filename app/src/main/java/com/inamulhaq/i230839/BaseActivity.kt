@@ -4,7 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -104,12 +108,39 @@ open class BaseActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.fade_in_fast, R.anim.none)
     }
 
-    /** Log out: back to Log in with an empty back stack. */
+    /** Log out: mark offline, sign out of Firebase, back to Log in with an empty back stack. */
     protected fun logOut() {
+        Presence.goOffline()
+        Db.auth.signOut()
         val intent = Intent(this, LoginActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
         finish()
+    }
+
+    /** First-time users finish their profile (Edit profile in setup mode) before reaching Home. */
+    protected fun enterProfileSetup() {
+        val intent = Intent(this, EditProfileActivity::class.java)
+            .putExtra(EditProfileActivity.EXTRA_SETUP, true)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
+    }
+
+    /** The eye icon next to a password field shows / hides the password. */
+    protected fun passwordToggle(eyeId: Int, fieldId: Int) {
+        val field = findViewById<EditText>(fieldId)
+        onTap(eyeId) {
+            val hidden = field.transformationMethod is PasswordTransformationMethod
+            field.transformationMethod =
+                if (hidden) HideReturnsTransformationMethod.getInstance()
+                else PasswordTransformationMethod.getInstance()
+            field.setSelection(field.text.length)
+        }
+    }
+
+    protected fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     /** Enter the app after logging in / signing up: Home becomes the only screen in the stack. */

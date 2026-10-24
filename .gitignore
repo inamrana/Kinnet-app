@@ -9,3 +9,7 @@
 .cxx
 .kotlin
 app/build
+
+# Firebase / Agora secrets: never commit
+google-services.json
+agora.properties

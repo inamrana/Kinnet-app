@@ -150,11 +150,11 @@
                         android:text="First name" />
 
                     <EditText
+                        android:id="@+id/input_first_name"
                         style="@style/InputField"
                         android:autofillHints="personGivenName"
                         android:hint="First name"
-                        android:inputType="textPersonName"
-                        android:text="Jacob" />
+                        android:inputType="textPersonName|textCapWords" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -168,11 +168,11 @@
                         android:text="Last name" />
 
                     <EditText
+                        android:id="@+id/input_last_name"
                         style="@style/InputField"
                         android:autofillHints="personFamilyName"
                         android:hint="Last name"
-                        android:inputType="textPersonName"
-                        android:text="West" />
+                        android:inputType="textPersonName|textCapWords" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -227,6 +227,7 @@
                             android:text="Day" />
 
                         <TextView
+                            android:id="@+id/birth_day"
                             style="@style/Text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -266,6 +267,7 @@
                             android:text="Month" />
 
                         <TextView
+                            android:id="@+id/birth_month"
                             style="@style/Text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -305,6 +307,7 @@
                             android:text="Year" />
 
                         <TextView
+                            android:id="@+id/birth_year"
                             style="@style/Text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -330,6 +333,7 @@
                 android:text="Gender" />
 
             <RadioGroup
+                android:id="@+id/gender_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -365,11 +369,11 @@
                     android:text="Email" />
 
                 <EditText
+                    android:id="@+id/input_email"
                     style="@style/InputField"
                     android:autofillHints="emailAddress"
                     android:hint="Email"
-                    android:inputType="textEmailAddress"
-                    android:text="jacob.west@mail.com" />
+                    android:inputType="textEmailAddress" />
             </LinearLayout>
 
             <!-- New password -->
@@ -396,14 +400,15 @@
                         android:text="New password" />
 
                     <EditText
+                        android:id="@+id/input_password"
                         style="@style/InputField"
                         android:autofillHints="newPassword"
                         android:hint="New password"
-                        android:inputType="textPassword"
-                        android:text="kinnect26!" />
+                        android:inputType="textPassword" />
                 </LinearLayout>
 
                 <ImageView
+                    android:id="@+id/btn_toggle_password"
                     style="@style/Icon.Touch"
                     android:contentDescription="@string/cd_show_password"
                     android:src="@drawable/ic_eye" />
@@ -418,19 +423,22 @@
                 android:orientation="horizontal">
 
                 <View
+                    android:id="@+id/strength_1"
                     android:layout_width="0dp"
                     android:layout_height="4dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_progress_red" />
+                    android:background="@drawable/bg_progress_grey" />
 
                 <View
+                    android:id="@+id/strength_2"
                     android:layout_width="0dp"
                     android:layout_height="4dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_progress_red" />
+                    android:background="@drawable/bg_progress_grey" />
 
                 <View
+                    android:id="@+id/strength_3"
                     android:layout_width="0dp"
                     android:layout_height="4dp"
                     android:layout_marginStart="6dp"
@@ -438,16 +446,18 @@
                     android:background="@drawable/bg_progress_grey" />
 
                 <TextView
+                    android:id="@+id/strength_label"
                     style="@style/Text.Bold"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Medium"
+                    android:text="Weak"
                     android:textColor="@color/badge_red"
                     android:textSize="13sp" />
             </LinearLayout>
 
             <CheckBox
+                android:id="@+id/check_terms"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
