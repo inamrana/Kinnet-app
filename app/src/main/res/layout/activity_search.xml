@@ -51,10 +51,10 @@
                 android:imeOptions="actionSearch"
                 android:importantForAutofill="no"
                 android:inputType="text"
-                android:paddingTop="0dp"
-                android:text="omar" />
+                android:paddingTop="0dp" />
 
             <ImageView
+                android:id="@+id/btn_clear"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:background="@drawable/bg_circle"
@@ -130,154 +130,22 @@
 
             <Space android:layout_width="match_parent" android:layout_height="6dp" />
 
+            <!-- People results (filled from the Realtime Database as you type) -->
             <LinearLayout
-                android:id="@+id/result_omar_farooq"
+                android:id="@+id/people_results"
                 android:layout_width="match_parent"
-                android:layout_height="68dp"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
 
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:backgroundTint="@color/av_green"
-                    android:text="OF"
-                    android:textSize="18sp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Text.Bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Omar Farooq"
-                        android:textSize="17sp" />
-
-                    <TextView
-                        style="@style/Text.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="Friend · Lives in Karachi" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/result_omar_siddiqui"
-                android:layout_width="match_parent"
-                android:layout_height="68dp"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:backgroundTint="@color/av_indigo"
-                    android:text="OS"
-                    android:textSize="18sp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Text.Bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Omar Siddiqui"
-                        android:textSize="17sp" />
-
-                    <TextView
-                        style="@style/Text.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="12 mutual friends · FAST-NUCES" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_circle"
-                    android:backgroundTint="@color/teal_light"
-                    android:contentDescription="Add Omar Siddiqui"
-                    android:padding="10dp"
-                    android:src="@drawable/ic_person_add"
-                    android:tint="@color/teal" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/result_omar_tariq"
-                android:layout_width="match_parent"
-                android:layout_height="68dp"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:backgroundTint="@color/av_brown"
-                    android:text="OT"
-                    android:textSize="18sp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Text.Bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Omar Tariq"
-                        android:textSize="17sp" />
-
-                    <TextView
-                        style="@style/Text.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="Works at Daraz · 3 mutual friends" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_circle"
-                    android:backgroundTint="@color/teal_light"
-                    android:contentDescription="Add Omar Tariq"
-                    android:padding="10dp"
-                    android:src="@drawable/ic_person_add"
-                    android:tint="@color/teal" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/people_empty"
+                style="@style/Text.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="6dp"
+                android:text="Type a name or username"
+                android:textSize="15sp" />
 
             <Button
                 android:id="@+id/btn_see_all_people"
