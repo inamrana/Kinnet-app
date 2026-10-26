@@ -29,6 +29,7 @@
             android:layout_marginStart="6dp">
 
             <TextView
+                android:id="@+id/chat_header_avatar"
                 style="@style/Avatar"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
@@ -37,10 +38,12 @@
                 android:textSize="15sp" />
 
             <View
+                android:id="@+id/chat_header_online"
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:layout_gravity="bottom|end"
-                android:background="@drawable/bg_online_dot" />
+                android:background="@drawable/bg_online_dot"
+                android:visibility="gone" />
         </FrameLayout>
 
         <LinearLayout
@@ -51,6 +54,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/chat_header_name"
                 style="@style/Text.Bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -61,6 +65,7 @@
                 style="@style/Text.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/chat_header_status"
                 android:layout_marginTop="3dp"
                 android:text="Active now" />
         </LinearLayout>
@@ -115,6 +120,7 @@
 
             <!-- Conversation intro -->
             <TextView
+                android:id="@+id/chat_intro_avatar"
                 style="@style/Avatar"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
@@ -129,6 +135,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
+                android:id="@+id/chat_intro_name"
                 android:layout_marginTop="16dp"
                 android:text="Aisha Khan"
                 android:textSize="25sp" />
@@ -138,8 +145,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
+                android:id="@+id/chat_intro_info"
                 android:layout_marginTop="8dp"
-                android:text="You're friends on Kinnect · Lives in Karachi" />
+                android:text="You're friends on Kinnect" />
 
             <TextView
                 style="@style/Text.SemiBold"
@@ -148,194 +156,68 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:layout_marginBottom="10dp"
+                android:id="@+id/chat_intro_date"
                 android:letterSpacing="0.04"
                 android:text="TODAY 4:49 PM"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
+            <!-- Messages, added live from chats/{chatId}/messages -->
             <LinearLayout
+                android:id="@+id/messages_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:gravity="bottom"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="24dp">
+                android:orientation="vertical" />
+        </LinearLayout>
+    </ScrollView>
 
-                <Space
-                    android:layout_width="30dp"
-                    android:layout_height="1dp" />
+    <!-- Replying to / Editing bar, shown above the composer when needed -->
+    <LinearLayout
+        android:id="@+id/reply_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_warm"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
 
-                <TextView
-                    style="@style/ChatBubble.In"
-                    android:text="Hey! Are you still coming Saturday?" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:gravity="bottom"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="24dp">
-
-                <Space
-                    android:layout_width="30dp"
-                    android:layout_height="1dp" />
-
-                <TextView
-                    style="@style/ChatBubble.In"
-                    android:text="Lina booked the table for 8" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:gravity="bottom"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="24dp">
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:backgroundTint="@color/av_crimson"
-                    android:text="AK"
-                    android:textSize="10sp" />
-
-                <TextView
-                    style="@style/ChatBubble.In"
-                    android:text="Bring the camera" />
-            </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                style="@style/ChatBubble.Out"
-                android:layout_gravity="end"
-                android:layout_marginStart="60dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginEnd="12dp"
-                android:text="Yes, obviously" />
-
-            <!-- Outgoing message with a love reaction overlapping its bottom-left corner -->
-            <FrameLayout
+                android:id="@+id/reply_title"
+                style="@style/Text.SemiBold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="3dp"
-                android:layout_marginEnd="12dp">
-
-                <TextView
-                    style="@style/ChatBubble.Out"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginBottom="12dp"
-                    android:text="Already charged both batteries" />
-
-                <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_gravity="bottom|start"
-                    android:background="@drawable/bg_circle"
-                    android:elevation="2dp"
-                    android:importantForAccessibility="no"
-                    android:padding="3dp"
-                    android:src="@drawable/react_love" />
-            </FrameLayout>
+                android:textSize="14sp" />
 
             <TextView
+                android:id="@+id/reply_text"
                 style="@style/Text.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="12dp"
-                android:text="You replied to Aisha"
-                android:textSize="13sp" />
-
-            <!-- Quoted message the reply refers to -->
-            <TextView
-                style="@style/ChatBubble.In"
-                android:layout_gravity="end"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="12dp"
-                android:alpha="0.85"
-                android:text="Lina booked the table for 8"
-                android:textColor="@color/text_secondary"
-                android:textSize="15sp" />
-
-            <TextView
-                style="@style/ChatBubble.Out"
-                android:layout_gravity="end"
-                android:layout_marginStart="60dp"
                 android:layout_marginTop="2dp"
-                android:layout_marginEnd="12dp"
-                android:text="Perfect, I'll be there by 7:45" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="200dp"
-                android:layout_height="140dp"
-                android:layout_gravity="end"
-                android:layout_marginTop="4dp"
-                android:layout_marginEnd="12dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="0dp">
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Shared photo"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/scene_lavender" />
-            </androidx.cardview.widget.CardView>
-
-            <!-- Seen by Aisha -->
-            <View
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:layout_gravity="end"
-                android:layout_marginTop="6dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/bg_circle"
-                android:backgroundTint="@color/av_crimson" />
-
-            <!-- Typing indicator -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:backgroundTint="@color/av_crimson"
-                    android:text="AK"
-                    android:textSize="10sp" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_bubble"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp">
-
-                    <View style="@style/TypingDot" android:alpha="0.9" />
-
-                    <View style="@style/TypingDot" android:alpha="0.6" />
-
-                    <View style="@style/TypingDot" android:alpha="0.35" />
-                </LinearLayout>
-            </LinearLayout>
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textSize="14sp" />
         </LinearLayout>
-    </ScrollView>
+
+        <TextView
+            android:id="@+id/reply_cancel"
+            style="@style/Text.Link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="Cancel"
+            android:textSize="15sp" />
+    </LinearLayout>
 
     <!-- Composer -->
     <LinearLayout
@@ -359,6 +241,7 @@
             android:tint="@color/teal" />
 
         <ImageView
+            android:id="@+id/btn_send_image"
             style="@style/Icon.Touch"
             android:contentDescription="@string/cd_photo"
             android:src="@drawable/ic_image"
@@ -398,6 +281,7 @@
         </LinearLayout>
 
         <ImageView
+            android:id="@+id/btn_send"
             style="@style/Icon.Touch"
             android:contentDescription="Send a like"
             android:src="@drawable/ic_like"

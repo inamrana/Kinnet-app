@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- System line in a chat, e.g. "Aisha took a screenshot" -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/msg_text"
+    style="@style/Text.SemiBold"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:layout_marginBottom="6dp"
+    android:gravity="center"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:textColor="@color/text_secondary"
+    android:textSize="13sp" />
