@@ -1,6 +1,7 @@
 package com.inamulhaq.i230839
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import android.text.method.PasswordTransformationMethod
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -26,9 +28,24 @@ import kotlin.math.max
  */
 open class BaseActivity : AppCompatActivity() {
 
+    private var onImagePicked: ((Uri) -> Unit)? = null
+    private val imagePicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { onImagePicked?.invoke(it) }
+        onImagePicked = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
+    /** Opens the gallery and hands back the chosen photo as Base64 JPEG text (see [Images.encode]). */
+    protected fun pickImage(maxSide: Int = 900, onPicked: (String) -> Unit) {
+        onImagePicked = { uri ->
+            val encoded = Images.encode(this, uri, maxSide)
+            if (encoded != null) onPicked(encoded) else toast("Could not read that photo")
+        }
+        imagePicker.launch("image/*")
     }
 
     override fun setContentView(layoutResID: Int) {
