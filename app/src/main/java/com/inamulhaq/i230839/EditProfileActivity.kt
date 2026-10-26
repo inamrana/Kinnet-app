@@ -3,6 +3,7 @@ package com.inamulhaq.i230839
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -40,7 +41,24 @@ class EditProfileActivity : BaseActivity() {
         }
         tapCloses(R.id.btn_cancel)
         onTap(R.id.btn_save) { save() }
+        // Photos are saved straight away, like in most social apps
+        listOf(R.id.btn_edit_picture, R.id.edit_avatar).forEach { id ->
+            onTap(id) { pickImage(maxSide = 400) { savePhoto("profileImage", it) } }
+        }
+        onTap(R.id.btn_edit_cover) { pickImage { savePhoto("coverImage", it) } }
         loadProfile()
+    }
+
+    private fun savePhoto(field: String, base64: String) {
+        Db.me()?.child(field)?.setValue(base64)?.addOnSuccessListener {
+            current = if (field == "profileImage") current.copy(profileImage = base64) else current.copy(coverImage = base64)
+            showPhotos()
+        }
+    }
+
+    private fun showPhotos() {
+        Avatars.show(findViewById(R.id.edit_avatar), current)
+        Images.show(findViewById<ImageView>(R.id.edit_cover), current.coverImage)
     }
 
     private fun loadProfile() {
@@ -50,7 +68,7 @@ class EditProfileActivity : BaseActivity() {
             username.setText(current.username)
             website.setText(current.website)
             bio.setText(current.bio)
-            findViewById<TextView>(R.id.edit_avatar).text = current.initials
+            showPhotos()
             findViewById<TextView>(R.id.value_email).text = current.email
             findViewById<TextView>(R.id.value_phone).text = current.phone.ifEmpty { "Not added" }
             findViewById<TextView>(R.id.value_gender).text = current.gender

@@ -61,6 +61,7 @@
                     style="@style/Avatar"
                     android:layout_width="46dp"
                     android:layout_height="46dp"
+                    android:id="@+id/menu_avatar"
                     android:text="JW"
                     android:textSize="16sp" />
 
@@ -75,6 +76,7 @@
                         style="@style/Text.Bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/menu_name"
                         android:text="Jacob West"
                         android:textSize="17sp" />
 

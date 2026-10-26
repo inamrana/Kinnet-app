@@ -28,6 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_weight="1"
+            android:id="@+id/profile_title"
             android:text="Jacob West"
             android:textSize="21sp" />
 
@@ -60,12 +61,14 @@
                     android:layout_height="match_parent"
                     android:contentDescription="Cover photo"
                     android:scaleType="centerCrop"
+                    android:id="@+id/profile_cover"
                     android:src="@drawable/scene_teal_wide" />
 
                 <ImageView
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_gravity="bottom|end"
+                    android:id="@+id/btn_edit_cover"
                     android:layout_margin="16dp"
                     android:background="@drawable/bg_circle"
                     android:backgroundTint="#E6F3F1ED"
@@ -86,6 +89,7 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/bg_profile_avatar"
                     android:backgroundTint="@null"
+                    android:id="@+id/profile_avatar"
                     android:text="JW"
                     android:textSize="52sp" />
 
@@ -93,6 +97,7 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_gravity="bottom|end"
+                    android:id="@+id/btn_edit_avatar"
                     android:layout_margin="8dp"
                     android:background="@drawable/bg_circle"
                     android:backgroundTint="@color/surface_pill"
@@ -107,6 +112,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="12dp"
+                android:id="@+id/profile_name"
                 android:text="Jacob West"
                 android:textSize="30sp" />
 
@@ -116,6 +122,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
+                android:id="@+id/profile_friends_count"
                 android:text="@string/profile_friends_count"
                 android:textSize="15sp" />
 
@@ -126,6 +133,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="16dp"
+                android:id="@+id/profile_bio"
                 android:text="Digital goodies designer. Everything is designed."
                 android:textSize="16sp" />
 
@@ -285,6 +293,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/profile_work"
                     android:text="@string/works_pixellz"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -308,6 +317,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/profile_school"
                     android:text="@string/studied_fast"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -331,6 +341,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/profile_lives"
                     android:text="@string/lives_karachi"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -354,6 +365,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/profile_joined"
                     android:text="Joined March 2019"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -378,6 +390,7 @@
                     style="@style/Text.Link"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/btn_find_friends"
                     android:text="Find friends"
                     android:textSize="15sp" />
             </LinearLayout>
@@ -388,6 +401,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
+                android:id="@+id/profile_friends_label"
                 android:text="834 friends" />
 
             <LinearLayout
@@ -407,6 +421,7 @@
                     android:background="@drawable/bg_rounded_12"
                     android:backgroundTint="@color/av_purple"
                     android:gravity="center"
+                    android:id="@+id/friend_tile_1"
                     android:text="LM"
                     android:textSize="36sp" />
                 <TextView
@@ -418,6 +433,7 @@
                     android:background="@drawable/bg_rounded_12"
                     android:backgroundTint="@color/av_crimson"
                     android:gravity="center"
+                    android:id="@+id/friend_tile_2"
                     android:text="AK"
                     android:textSize="36sp" />
                 <TextView
@@ -429,6 +445,7 @@
                     android:background="@drawable/bg_rounded_12"
                     android:backgroundTint="@color/av_green"
                     android:gravity="center"
+                    android:id="@+id/friend_tile_3"
                     android:text="OF"
                     android:textSize="36sp" />
             </LinearLayout>

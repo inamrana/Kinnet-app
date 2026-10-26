@@ -28,6 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_weight="1"
+            android:id="@+id/other_title"
             android:text="Omar Farooq"
             android:textSize="21sp" />
 
@@ -59,6 +60,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="Cover photo"
                     android:scaleType="centerCrop"
+                    android:id="@+id/other_cover"
                     android:src="@drawable/scene_night_wide" />
             </FrameLayout>
 
@@ -71,6 +73,7 @@
                 android:layout_marginTop="-96dp"
                 android:background="@drawable/bg_profile_avatar_ringed"
                 android:backgroundTint="@null"
+                android:id="@+id/other_avatar"
                 android:text="OF"
                 android:textSize="54sp" />
 
@@ -80,6 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
+                android:id="@+id/other_name"
                 android:text="Omar Farooq"
                 android:textSize="30sp" />
 
@@ -89,6 +93,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
+                android:id="@+id/other_friends_count"
                 android:text="@string/other_friends_count"
                 android:textSize="15sp" />
 
@@ -98,6 +103,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="10dp"
+                android:id="@+id/other_bio"
                 android:text="Night photographer. Karachi after dark."
                 android:textSize="16sp" />
 
@@ -124,6 +130,7 @@
                         style="@style/Icon"
                         android:layout_width="19dp"
                         android:layout_height="19dp"
+                        android:id="@+id/add_friend_icon"
                         android:src="@drawable/ic_person_add"
                         android:tint="@color/white" />
 
@@ -132,6 +139,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
+                        android:id="@+id/add_friend_label"
                         android:text="Add friend"
                         android:textColor="@color/white"
                         android:textSize="16sp" />
@@ -192,6 +200,7 @@
                     android:backgroundTint="@color/av_crimson"
                     android:layout_marginStart="0dp"
                     android:foreground="@drawable/bg_reaction_ring"
+                    android:id="@+id/mutual_1"
                     android:text="AK"
                     android:textSize="10sp" />
 
@@ -202,6 +211,7 @@
                     android:backgroundTint="@color/av_purple"
                     android:layout_marginStart="-8dp"
                     android:foreground="@drawable/bg_reaction_ring"
+                    android:id="@+id/mutual_2"
                     android:text="LM"
                     android:textSize="10sp" />
 
@@ -212,6 +222,7 @@
                     android:backgroundTint="@color/av_steel"
                     android:layout_marginStart="-8dp"
                     android:foreground="@drawable/bg_reaction_ring"
+                    android:id="@+id/mutual_3"
                     android:text="ZR"
                     android:textSize="10sp" />
 
@@ -222,6 +233,7 @@
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:lineSpacingExtra="3dp"
+                    android:id="@+id/other_mutual_text"
                     android:text="@string/mutual_with" />
             </LinearLayout>
 
@@ -250,6 +262,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/other_work"
                     android:text="@string/works_nocturne"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -273,6 +286,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/other_lives"
                     android:text="@string/lives_karachi"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -296,6 +310,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:id="@+id/other_joined"
                     android:text="Joined June 2017"
                     android:textSize="16sp" />
             </LinearLayout>

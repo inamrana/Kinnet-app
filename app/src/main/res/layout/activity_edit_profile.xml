@@ -74,6 +74,7 @@
                     android:text="Profile picture" />
 
                 <TextView
+                    android:id="@+id/btn_edit_picture"
                     style="@style/Text.Link"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -108,6 +109,7 @@
                     android:text="Cover photo" />
 
                 <TextView
+                    android:id="@+id/btn_edit_cover"
                     style="@style/Text.Link"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -129,6 +131,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="Cover photo"
                     android:scaleType="centerCrop"
+                    android:id="@+id/edit_cover"
                     android:src="@drawable/scene_teal_wide" />
 
                 <ImageView
