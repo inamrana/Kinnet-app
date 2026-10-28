@@ -73,6 +73,15 @@
                     android:scaleType="centerCrop" />
             </androidx.cardview.widget.CardView>
 
+            <!-- A post shared from the feed -->
+            <include
+                android:id="@+id/msg_post_card"
+                layout="@layout/view_message_post"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:visibility="gone" />
+
             <ImageView
                 android:id="@+id/msg_heart"
                 android:layout_width="26dp"

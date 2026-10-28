@@ -12,6 +12,8 @@ import androidx.core.widget.doAfterTextChanged
 /**
  * 20 · Chats — real conversations from userChats/{uid}, newest first, with the last message,
  * its time and an unread dot. Green dots (and the rail of active friends) follow presence live.
+ *
+ * Opened with [EXTRA_SHARE_POST] it becomes "Send to": tapping a person sends them the post.
  */
 class ChatsActivity : BaseActivity() {
 
@@ -23,6 +25,8 @@ class ChatsActivity : BaseActivity() {
     private lateinit var chatsList: LinearLayout
     private lateinit var activeList: LinearLayout
     private lateinit var search: EditText
+    private val sharePostId by lazy { intent.getStringExtra(EXTRA_SHARE_POST).orEmpty() }
+    private val sharing get() = sharePostId.isNotEmpty()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +37,10 @@ class ChatsActivity : BaseActivity() {
         search = findViewById(R.id.input_chat_search)
         tapCloses(R.id.btn_back)
         search.doAfterTextChanged { showChats() }
+        if (sharing) {
+            findViewById<TextView>(R.id.chats_title).text = "Send to"
+            search.hint = "Search friends"
+        }
 
         val me = Db.uid ?: return
         watch.on(Db.userChats.child(me)) { snapshot ->
@@ -46,6 +54,7 @@ class ChatsActivity : BaseActivity() {
             friendIds = snapshot.children.mapNotNull { it.key }
             friendIds.forEach(::watchUser)
             showActive()
+            if (sharing) showChats()
         }
     }
 
@@ -61,7 +70,11 @@ class ChatsActivity : BaseActivity() {
 
     private fun showChats() {
         val filter = search.text.toString().trim().lowercase()
-        val rows = summaries.filter { summary ->
+        // In "Send to" mode, friends you have not chatted with yet are listed too
+        val source = if (sharing) {
+            summaries + friendIds.filter { id -> summaries.none { it.otherUid == id } }.map { ChatSummary(otherUid = it) }
+        } else summaries
+        val rows = source.filter { summary ->
             filter.isEmpty() || people[summary.otherUid]?.nameLower?.contains(filter) == true
         }
         chatsList.removeAllViews()
@@ -72,18 +85,21 @@ class ChatsActivity : BaseActivity() {
             row.findViewById<TextView>(R.id.chat_name).text = user.fullName
             row.findViewById<View>(R.id.chat_online).visibility = if (user.online) View.VISIBLE else View.GONE
 
-            val unread = summary.unread > 0
+            val unread = summary.unread > 0 && !sharing
             row.findViewById<TextView>(R.id.chat_preview).apply {
-                text = "${summary.lastMessage} · ${TimeAgo.short(summary.lastTime)}"
+                text = when {
+                    sharing -> "@${user.username}"
+                    else -> "${summary.lastMessage} · ${TimeAgo.short(summary.lastTime)}"
+                }
                 // Unread rows use the bold preview + teal dot from the design
                 if (unread) setTextAppearance(R.style.Text_Bold) else setTextAppearance(R.style.Text_Secondary)
                 textSize = 15f
             }
             row.findViewById<View>(R.id.chat_unread).visibility = if (unread) View.VISIBLE else View.GONE
-            row.setOnClickListener { openChat(summary.otherUid) }
+            row.setOnClickListener { if (sharing) sharePost(user) else openChat(summary.otherUid) }
             chatsList.addView(row)
         }
-        findViewById<View>(R.id.chats_empty).visibility = if (summaries.isEmpty()) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.chats_empty).visibility = if (source.isEmpty()) View.VISIBLE else View.GONE
     }
 
     /** Friends who are online right now, in the notes rail. */
@@ -93,9 +109,17 @@ class ChatsActivity : BaseActivity() {
             val item = LayoutInflater.from(this).inflate(R.layout.item_active_friend, activeList, false)
             Avatars.show(item.findViewById(R.id.active_avatar), user)
             item.findViewById<TextView>(R.id.active_name).text = user.firstName.ifEmpty { user.fullName }
-            item.setOnClickListener { openChat(user.uid) }
+            item.setOnClickListener { if (sharing) sharePost(user) else openChat(user.uid) }
             activeList.addView(item)
         }
+    }
+
+    /** Sends the post as a message and counts the share on the post. */
+    private fun sharePost(user: User) {
+        ChatSender.send(user.uid, Message.TYPE_POST, postId = sharePostId, preview = "Shared a post")
+        Db.posts.child(sharePostId).child("shareCount").setValue(com.google.firebase.database.ServerValue.increment(1))
+        toast("Sent to ${user.firstName.ifEmpty { user.fullName }}")
+        finish()
     }
 
     private fun openChat(uid: String) {

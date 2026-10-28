@@ -23,7 +23,7 @@ import java.util.Locale
 /**
  * 21 · Chat — a live one-to-one conversation stored in chats/{chatId}/messages.
  *
- * Send text or photos, reply to a message, heart a message, and edit / delete your own
+ * Send text, photos or shared posts, reply to a message, heart a message, and edit / delete your own
  * messages for 5 minutes after sending (long press). The header shows "Active now" live.
  * The phone and video icons start a call.
  */
@@ -138,12 +138,19 @@ class ChatActivity : BaseActivity() {
         val view = inflater.inflate(if (mine) R.layout.item_message_out else R.layout.item_message_in, list, false)
         val text = view.findViewById<TextView>(R.id.msg_text)
         val imageCard = view.findViewById<View>(R.id.msg_image_card)
-        if (message.type == Message.TYPE_IMAGE) {
-            text.visibility = View.GONE
-            imageCard.visibility = View.VISIBLE
-            Images.show(view.findViewById(R.id.msg_image), message.image)
-        } else {
-            text.text = message.text
+        val postCard = view.findViewById<View>(R.id.msg_post_card)
+        when (message.type) {
+            Message.TYPE_IMAGE -> {
+                text.visibility = View.GONE
+                imageCard.visibility = View.VISIBLE
+                Images.show(view.findViewById(R.id.msg_image), message.image)
+            }
+            Message.TYPE_POST -> {
+                text.visibility = View.GONE
+                postCard.visibility = View.VISIBLE
+                bindSharedPost(postCard, message.postId)
+            }
+            else -> text.text = message.text
         }
 
         if (message.replyToId.isNotEmpty()) {
@@ -161,7 +168,11 @@ class ChatActivity : BaseActivity() {
         view.findViewById<View>(R.id.msg_heart).visibility = if (hearted) View.VISIBLE else View.GONE
         if (hearted) {
             // Leave room under the bubble for the overlapping heart, as in the design
-            val bubble = if (message.type == Message.TYPE_IMAGE) imageCard else text
+            val bubble = when (message.type) {
+                Message.TYPE_IMAGE -> imageCard
+                Message.TYPE_POST -> postCard
+                else -> text
+            }
             (bubble.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = dp(12)
         }
         view.findViewById<View>(R.id.msg_edited).visibility = if (message.edited) View.VISIBLE else View.GONE
@@ -170,7 +181,33 @@ class ChatActivity : BaseActivity() {
         body.setOnLongClickListener { showOptions(message); true }
         text.setOnLongClickListener { showOptions(message); true }
         imageCard.setOnLongClickListener { showOptions(message); true }
+        postCard.setOnLongClickListener { showOptions(message); true }
         return view
+    }
+
+    /** Fills the shared-post card and opens the post's comments when tapped. */
+    private fun bindSharedPost(card: View, postId: String) {
+        card.setOnClickListener { PostCard.openComments(this, postId) }
+        Db.posts.child(postId).get().addOnSuccessListener { snapshot ->
+            val post = snapshot.getValue(Post::class.java)
+            val text = card.findViewById<TextView>(R.id.shared_post_text)
+            if (post == null) {
+                text.text = "This post is no longer available"
+                card.setOnClickListener(null)
+                return@addOnSuccessListener
+            }
+            text.text = post.text.ifEmpty { "Photo" }
+            UserCache.get(post.authorId) { author ->
+                card.findViewById<TextView>(R.id.shared_post_author).text = author.fullName
+                Avatars.show(card.findViewById(R.id.shared_post_avatar), author)
+            }
+            if (post.imageCount > 0) {
+                card.findViewById<View>(R.id.shared_post_image_card).visibility = View.VISIBLE
+                PostImages.get(postId) { images ->
+                    images.firstOrNull()?.let { Images.show(card.findViewById(R.id.shared_post_image), it) }
+                }
+            }
+        }
     }
 
     /** Incoming messages show the small avatar only on the last bubble of a run, like the design. */
@@ -299,16 +336,7 @@ class ChatActivity : BaseActivity() {
 
     /** Keeps both people's Chats list rows (last message, time, unread count) up to date. */
     private fun updateSummaries(preview: String, bumpUnread: Boolean) {
-        val updates = mutableMapOf<String, Any>(
-            "userChats/$me/$otherUid/otherUid" to otherUid,
-            "userChats/$me/$otherUid/lastMessage" to "You: $preview",
-            "userChats/$me/$otherUid/lastTime" to ServerValue.TIMESTAMP,
-            "userChats/$otherUid/$me/otherUid" to me,
-            "userChats/$otherUid/$me/lastMessage" to preview,
-            "userChats/$otherUid/$me/lastTime" to ServerValue.TIMESTAMP,
-        )
-        if (bumpUnread) updates["userChats/$otherUid/$me/unread"] = ServerValue.increment(1)
-        Db.update(updates)
+        Db.update(ChatSender.summaries(me, otherUid, preview, bumpUnread))
     }
 
     private fun markRead() {
@@ -324,8 +352,11 @@ class ChatActivity : BaseActivity() {
 
     // ---- text helpers -------------------------------------------------------------------
 
-    private fun previewOf(message: Message) =
-        if (message.type == Message.TYPE_IMAGE) "Photo" else message.text
+    private fun previewOf(message: Message) = when (message.type) {
+        Message.TYPE_IMAGE -> "Photo"
+        Message.TYPE_POST -> "Shared a post"
+        else -> message.text
+    }
 
     private fun replyLabel(message: Message): String {
         val otherName = other.firstName.ifEmpty { other.fullName }

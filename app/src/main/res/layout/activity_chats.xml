@@ -25,6 +25,7 @@
         <TextView
             style="@style/Text.Display"
             android:layout_width="0dp"
+            android:id="@+id/chats_title"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_weight="1"
