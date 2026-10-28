@@ -86,6 +86,33 @@
       "$postId": {
         ".write": "auth != null && newData.parent().parent().child('posts').child($postId).child('authorId').val() === auth.uid"
       }
+    },
+    "comments": {
+      ".read": "auth != null",
+      "$postId": {
+        ".indexOn": [
+          "timestamp"
+        ],
+        "$commentId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('authorId').val() === auth.uid) || data.child('authorId').val() === auth.uid)",
+          "likes": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          }
+        }
+      }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".indexOn": [
+          "timestamp"
+        ],
+        "$id": {
+          ".write": "auth != null && (auth.uid === $uid || (!data.exists() && newData.child('fromUid').val() === auth.uid))"
+        }
+      }
     }
   }
 }
