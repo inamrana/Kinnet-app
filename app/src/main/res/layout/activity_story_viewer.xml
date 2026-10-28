@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 11 · Story viewer: Omar's story with progress, sticker and quick reactions -->
+<!-- 11 · Story viewer: a friend's live stories with progress, label, reply and quick reactions -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/viewer_root"
@@ -12,6 +12,7 @@
     android:paddingEnd="8dp">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/story_card"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -19,82 +20,76 @@
         app:cardCornerRadius="18dp"
         app:cardElevation="0dp">
 
+        <!-- The story's photo or video -->
         <ImageView
+            android:id="@+id/story_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:scaleType="centerCrop"
-            android:src="@drawable/scene_night_tall" />
+            android:contentDescription="Story"
+            android:scaleType="centerCrop" />
 
+        <VideoView
+            android:id="@+id/story_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- Text label placed on the story; StoryLabel positions it -->
+        <TextView
+            android:id="@+id/story_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_sticker_white"
+            android:backgroundTint="@color/badge_red"
+            android:elevation="2dp"
+            android:fontFamily="@font/bricolage_extrabold"
+            android:includeFontPadding="false"
+            android:maxWidth="280dp"
+            android:paddingStart="18dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="12dp"
+            android:rotation="2"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:visibility="gone" />
+
+        <!-- Tap the left third to go back, anywhere else to go forward -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/story_prev"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:contentDescription="Previous story" />
+
+            <View
+                android:id="@+id/story_next"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:contentDescription="Next story" />
+        </LinearLayout>
+
+        <!-- Progress segments + who posted it -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/story_progress"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="0dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_progress_track"
-                    android:orientation="horizontal">
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_progress_fill" />
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_progress_track"
-                    android:orientation="horizontal">
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_progress_fill" />
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_progress_track"
-                    android:orientation="horizontal">
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="0.5"
-                        android:background="@drawable/bg_progress_fill" />
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="0.5" />
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_progress_track"
-                    android:orientation="horizontal">
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1" />
-                </LinearLayout>
-            </LinearLayout>
+                android:orientation="horizontal" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -106,11 +101,10 @@
                 android:paddingEnd="6dp">
 
                 <TextView
+                    android:id="@+id/story_owner_avatar"
                     style="@style/Avatar"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:backgroundTint="@color/av_green"
-                    android:text="OF"
                     android:textSize="14sp" />
 
                 <LinearLayout
@@ -118,14 +112,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:alpha="1"
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/story_owner_name"
                         style="@style/Text.Bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Omar Farooq"
                         android:textColor="@color/white"
                         android:textSize="16sp" />
 
@@ -137,14 +130,15 @@
                         android:orientation="horizontal">
 
                         <TextView
+                            android:id="@+id/story_meta"
                             style="@style/Text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="5h · "
                             android:textColor="@color/white"
                             android:textSize="13sp" />
 
                         <ImageView
+                            android:id="@+id/story_globe"
                             style="@style/Icon"
                             android:layout_width="12dp"
                             android:layout_height="12dp"
@@ -154,6 +148,7 @@
                 </LinearLayout>
 
                 <ImageView
+                    android:id="@+id/btn_story_more"
                     style="@style/Icon.Touch"
                     android:contentDescription="@string/cd_more"
                     android:src="@drawable/ic_more"
@@ -168,27 +163,6 @@
                     android:tint="@color/white" />
             </LinearLayout>
         </LinearLayout>
-
-        <!-- Text sticker placed on the photo -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginStart="0dp"
-            android:background="@drawable/bg_sticker_white"
-            android:backgroundTint="@color/white"
-            android:elevation="2dp"
-            android:fontFamily="@font/bricolage_extrabold"
-            android:includeFontPadding="false"
-            android:paddingStart="18dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="12dp"
-            android:rotation="-3"
-            android:text="Karachi nights"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:translationY="222dp" />
     </androidx.cardview.widget.CardView>
 
     <!-- Reply + quick reactions -->
@@ -206,6 +180,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_outline_dark_pill"
             android:hint="Send message…"
+            android:imeOptions="actionSend"
             android:importantForAutofill="no"
             android:inputType="textCapSentences"
             android:paddingStart="20dp"
@@ -215,16 +190,19 @@
             android:textSize="16sp" />
 
         <ImageView
+            android:id="@+id/story_react_like"
             style="@style/StoryReaction"
             android:contentDescription="Like"
             android:src="@drawable/react_like" />
 
         <ImageView
+            android:id="@+id/story_react_love"
             style="@style/StoryReaction"
             android:contentDescription="Love"
             android:src="@drawable/react_love" />
 
         <ImageView
+            android:id="@+id/story_react_haha"
             style="@style/StoryReaction"
             android:contentDescription="Haha"
             android:src="@drawable/react_haha" />

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Small overlapping avatar (story viewers, mutual friends) -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Avatar"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:foreground="@drawable/bg_avatar_ring_dark"
+    android:textSize="10sp" />

@@ -19,11 +19,18 @@ class HomeActivity : BaseActivity() {
     private var posts = listOf<Post>()
     private val cards = hashMapOf<String, View>()
 
+    // Stories rail: one listener per person (you + friends)
+    private val storyWatches = hashMapOf<String, Watch>()
+    private val storiesByOwner = hashMapOf<String, List<Story>>()
+    private val closeFriendOf = hashMapOf<String, Boolean>()
+    private lateinit var rail: LinearLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         setupTopTabs(selected = 0)
         feed = findViewById(R.id.feed_list)
+        rail = findViewById(R.id.stories_rail)
 
         tapOpens(ProfileActivity::class.java, R.id.composer_avatar)
         tapOpens(CreatePostActivity::class.java, R.id.composer_input, R.id.composer_photo)
@@ -41,6 +48,7 @@ class HomeActivity : BaseActivity() {
         watch.on(Db.friends.child(me)) { snapshot ->
             friendIds = snapshot.children.mapNotNull { it.key }.toSet()
             showFeed()
+            watchStories(friendIds + me)
         }
         watch.on(Db.posts.orderByChild("timestamp").limitToLast(MAX_POSTS)) { snapshot ->
             posts = snapshot.children.mapNotNull { child ->
@@ -66,7 +74,63 @@ class HomeActivity : BaseActivity() {
         findViewById<View>(R.id.feed_empty).visibility = if (visible.isEmpty()) View.VISIBLE else View.GONE
     }
 
+    // ---- stories rail -------------------------------------------------------------------
+
+    private fun watchStories(owners: Set<String>) {
+        val me = Db.uid ?: return
+        (storyWatches.keys - owners).forEach { gone ->
+            storyWatches.remove(gone)?.stop()
+            storiesByOwner.remove(gone)
+        }
+        (owners - storyWatches.keys).forEach { owner ->
+            val ownerWatch = Watch().on(Db.stories.child(owner)) { snapshot ->
+                val all = snapshot.children.mapNotNull { it.getValue(Story::class.java)?.copy(id = it.key.orEmpty(), ownerId = owner) }
+                if (owner == me) Stories.deleteExpired(all)
+                storiesByOwner[owner] = all
+                showStories()
+            }
+            if (owner != me) {
+                ownerWatch.on(Db.closeFriends.child(owner).child(me)) {
+                    closeFriendOf[owner] = it.exists()
+                    showStories()
+                }
+            }
+            storyWatches[owner] = ownerWatch
+        }
+        showStories()
+    }
+
+    /** "Create story" stays first, then your story, then friends with stories from the last 24 hours. */
+    private fun showStories() {
+        val me = Db.uid ?: return
+        while (rail.childCount > 1) rail.removeViewAt(1)
+        val owners = storiesByOwner.mapNotNull { (owner, stories) ->
+            val visible = Stories.visible(stories, me, closeFriendOf[owner] == true)
+            if (visible.isEmpty()) null else owner to visible
+        }.sortedWith(compareBy<Pair<String, List<Story>>> { it.first != me }.thenByDescending { it.second.last().timestamp })
+
+        owners.forEach { (owner, stories) ->
+            val card = LayoutInflater.from(this).inflate(R.layout.item_story_card, rail, false)
+            Images.show(card.findViewById(R.id.story_image), stories.last().thumb)
+            val unseen = owner == me || stories.any { !it.viewers.containsKey(me) }
+            card.findViewById<View>(R.id.story_avatar).alpha = if (unseen) 1f else 0.6f
+            UserCache.get(owner) { user ->
+                Avatars.show(card.findViewById(R.id.story_avatar), user)
+                card.findViewById<android.widget.TextView>(R.id.story_name).text =
+                    if (owner == me) "Your story" else user.fullName
+            }
+            card.setOnClickListener {
+                if (owner == me) open(YourStoryActivity::class.java)
+                else startActivity(
+                    android.content.Intent(this, StoryViewerActivity::class.java).putExtra(StoryViewerActivity.EXTRA_OWNER, owner)
+                )
+            }
+            rail.addView(card)
+        }
+    }
+
     override fun onDestroy() {
+        storyWatches.values.forEach(Watch::stop)
         watch.stop()
         super.onDestroy()
     }

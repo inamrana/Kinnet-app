@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 12 · Your story: your shared story with reactions and viewer actions -->
+<!-- 12 · Your story: your live stories with viewers, reactions and actions -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/your_story_root"
@@ -12,6 +12,7 @@
     android:paddingEnd="8dp">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/story_card"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -19,44 +20,76 @@
         app:cardCornerRadius="18dp"
         app:cardElevation="0dp">
 
+        <!-- The story's photo or video -->
         <ImageView
+            android:id="@+id/story_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:scaleType="centerCrop"
-            android:src="@drawable/scene_green_tall" />
+            android:contentDescription="Story"
+            android:scaleType="centerCrop" />
 
+        <VideoView
+            android:id="@+id/story_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- Text label placed on the story; StoryLabel positions it -->
+        <TextView
+            android:id="@+id/story_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_sticker_white"
+            android:backgroundTint="@color/badge_red"
+            android:elevation="2dp"
+            android:fontFamily="@font/bricolage_extrabold"
+            android:includeFontPadding="false"
+            android:maxWidth="280dp"
+            android:paddingStart="18dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="12dp"
+            android:rotation="2"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:visibility="gone" />
+
+        <!-- Tap the left third to go back, anywhere else to go forward -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/story_prev"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:contentDescription="Previous story" />
+
+            <View
+                android:id="@+id/story_next"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:contentDescription="Next story" />
+        </LinearLayout>
+
+        <!-- Progress segments + who posted it -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/story_progress"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="0dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_progress_track"
-                    android:orientation="horizontal">
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="0.84"
-                        android:background="@drawable/bg_progress_fill" />
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="0.16" />
-                </LinearLayout>
-            </LinearLayout>
+                android:orientation="horizontal" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -68,11 +101,10 @@
                 android:paddingEnd="6dp">
 
                 <TextView
+                    android:id="@+id/story_owner_avatar"
                     style="@style/Avatar"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:backgroundTint="@color/teal"
-                    android:text="JW"
                     android:textSize="14sp" />
 
                 <LinearLayout
@@ -80,14 +112,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:alpha="0.85"
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/story_owner_name"
                         style="@style/Text.Bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Your story"
                         android:textColor="@color/white"
                         android:textSize="16sp" />
 
@@ -99,99 +130,43 @@
                         android:orientation="horizontal">
 
                         <TextView
+                            android:id="@+id/story_meta"
                             style="@style/Text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="11h · Close friends"
                             android:textColor="@color/white"
                             android:textSize="13sp" />
+
+                        <ImageView
+                            android:id="@+id/story_globe"
+                            style="@style/Icon"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
+                            android:src="@drawable/ic_globe"
+                            android:tint="@color/white" />
                     </LinearLayout>
                 </LinearLayout>
+
 
                 <ImageView
                     android:id="@+id/btn_close"
                     style="@style/Icon.Touch"
+                    android:layout_marginStart="6dp"
                     android:contentDescription="@string/cd_close"
                     android:src="@drawable/ic_close"
                     android:tint="@color/white" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Text sticker placed on the photo -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|start"
-            android:layout_marginStart="26dp"
-            android:background="@drawable/bg_sticker_white"
-            android:backgroundTint="@color/badge_red"
-            android:elevation="2dp"
-            android:fontFamily="@font/bricolage_extrabold"
-            android:includeFontPadding="false"
-            android:paddingStart="18dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="12dp"
-            android:rotation="2"
-            android:text="Saturday plans"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:translationY="56dp" />
-
-        <!-- Floating hearts from viewers' reactions -->
-        <FrameLayout
+        <!-- Floating hearts, one per love reaction (up to five) -->
+        <LinearLayout
+            android:id="@+id/story_hearts"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|start"
-            android:layout_marginStart="10dp"
-            android:layout_marginBottom="30dp">
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="30dp"
-                android:layout_marginBottom="168dp"
-                android:alpha="0.35"
-                android:importantForAccessibility="no"
-                android:src="@drawable/react_love" />
-            <ImageView
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="14dp"
-                android:layout_marginBottom="128dp"
-                android:alpha="0.45"
-                android:importantForAccessibility="no"
-                android:src="@drawable/react_love" />
-            <ImageView
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="38dp"
-                android:layout_marginBottom="84dp"
-                android:alpha="0.6"
-                android:importantForAccessibility="no"
-                android:src="@drawable/react_love" />
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="20dp"
-                android:layout_marginBottom="38dp"
-                android:alpha="0.85"
-                android:importantForAccessibility="no"
-                android:src="@drawable/react_love" />
-            <ImageView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="44dp"
-                android:layout_marginBottom="0dp"
-                android:alpha="1"
-                android:importantForAccessibility="no"
-                android:src="@drawable/react_love" />
-        </FrameLayout>
+            android:layout_marginStart="14dp"
+            android:layout_marginBottom="30dp"
+            android:orientation="vertical" />
     </androidx.cardview.widget.CardView>
 
     <!-- Viewers + story actions -->
@@ -207,51 +182,23 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1.2"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:gravity="center"
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/story_viewer_avatars"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginStart="0dp"
-                    android:backgroundTint="@color/av_crimson"
-                    android:foreground="@drawable/bg_avatar_ring_dark"
-                    android:text="AK"
-                    android:textSize="10sp" />
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginStart="-8dp"
-                    android:backgroundTint="@color/av_purple"
-                    android:foreground="@drawable/bg_avatar_ring_dark"
-                    android:text="LM"
-                    android:textSize="10sp" />
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginStart="-8dp"
-                    android:backgroundTint="@color/av_green"
-                    android:foreground="@drawable/bg_avatar_ring_dark"
-                    android:text="OF"
-                    android:textSize="10sp" />
-            </LinearLayout>
+                android:layout_height="30dp"
+                android:orientation="horizontal" />
 
             <TextView
+                android:id="@+id/story_seen_by"
                 style="@style/Text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Seen by 24"
+                android:text="No views yet"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
         </LinearLayout>
