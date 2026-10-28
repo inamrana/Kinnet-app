@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One notification (design screen 18): avatar with a type badge, sentence, time,
+     and Confirm / Delete for friend requests -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingTop="9dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="9dp">
+
+    <!-- Avatar with the notification type badge overlapping its corner -->
+    <FrameLayout
+        android:layout_width="66dp"
+        android:layout_height="66dp">
+
+        <TextView
+            android:id="@+id/notif_avatar"
+            style="@style/Avatar"
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:textSize="22sp" />
+
+        <ImageView
+            android:id="@+id/notif_badge"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="@color/teal"
+            android:foreground="@drawable/bg_white_ring_thick"
+            android:importantForAccessibility="no"
+            android:padding="7dp"
+            android:src="@drawable/ic_person"
+            android:tint="@color/white" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/notif_text"
+            style="@style/Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="4dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/notif_time"
+            style="@style/Text.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/notif_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="40dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/notif_confirm"
+                style="@style/Button.PrimarySquare"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Confirm" />
+
+            <Button
+                android:id="@+id/notif_delete"
+                style="@style/Button.Grey"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="Delete" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/notif_more"
+        style="@style/Icon.Touch"
+        android:contentDescription="@string/cd_more"
+        android:src="@drawable/ic_more"
+        android:tint="@color/text_secondary" />
+</LinearLayout>

@@ -107,7 +107,8 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".indexOn": [
-          "timestamp"
+          "timestamp",
+          "read"
         ],
         "$id": {
           ".write": "auth != null && (auth.uid === $uid || (!data.exists() && newData.child('fromUid').val() === auth.uid))"

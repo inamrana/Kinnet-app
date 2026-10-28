@@ -100,7 +100,9 @@
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_badge"
                 android:gravity="center"
+                android:id="@+id/badge_notifications"
                 android:text="5"
+                android:visibility="gone"
                 android:textColor="@color/white"
                 android:textSize="11sp" />
 

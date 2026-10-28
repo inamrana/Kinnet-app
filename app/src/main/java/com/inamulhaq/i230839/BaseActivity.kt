@@ -29,6 +29,7 @@ import kotlin.math.max
 open class BaseActivity : AppCompatActivity() {
 
     private var onImagePicked: ((Uri) -> Unit)? = null
+    private val badgeWatch = Watch()
     private val imagePicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { onImagePicked?.invoke(it) }
         onImagePicked = null
@@ -115,6 +116,36 @@ open class BaseActivity : AppCompatActivity() {
         // Search and Chats buttons are part of every main header.
         tapOpens(SearchActivity::class.java, R.id.btn_search)
         tapOpens(ChatsActivity::class.java, R.id.btn_messenger)
+        watchBadges()
+    }
+
+    /**
+     * Red badges: friend requests + unread notifications on the bell, conversations with
+     * unread messages on the Chats button.
+     */
+    private fun watchBadges() {
+        val me = Db.uid ?: return
+        var requests = 0
+        var unreadNotices = 0
+        fun showBell() = showBadge(R.id.badge_notifications, requests + unreadNotices)
+        badgeWatch
+            .on(Db.friendRequests.child(me)) { requests = it.childrenCount.toInt(); showBell() }
+            .on(Db.notifications.child(me).orderByChild("read").equalTo(false)) { unreadNotices = it.childrenCount.toInt(); showBell() }
+            .on(Db.userChats.child(me)) { snapshot ->
+                showBadge(R.id.badge_chats, snapshot.children.count { (it.child("unread").getValue(Int::class.java) ?: 0) > 0 })
+            }
+    }
+
+    private fun showBadge(id: Int, count: Int) {
+        findViewById<android.widget.TextView>(id)?.apply {
+            visibility = if (count > 0) View.VISIBLE else View.GONE
+            text = if (count > 9) "9+" else count.toString()
+        }
+    }
+
+    override fun onDestroy() {
+        badgeWatch.stop()
+        super.onDestroy()
     }
 
     /** Switches to another main tab without stacking duplicate tab screens. */

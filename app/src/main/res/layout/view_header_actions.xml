@@ -38,7 +38,9 @@
             android:layout_gravity="top|end"
             android:background="@drawable/bg_badge"
             android:gravity="center"
+            android:id="@+id/badge_chats"
             android:text="3"
+            android:visibility="gone"
             android:textColor="@color/white"
             android:textSize="11sp" />
     </FrameLayout>

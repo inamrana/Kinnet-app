@@ -32,7 +32,7 @@ object Friends {
             "friendRequests/$me/$from" to null,
             "sentRequests/$from/$me" to null,
         )
-    )
+    ).also { Notices.send(from, Notice.TYPE_FRIEND_ACCEPTED) }
 
     fun delete(from: String) = Db.update(
         mapOf("friendRequests/$me/$from" to null, "sentRequests/$from/$me" to null)
