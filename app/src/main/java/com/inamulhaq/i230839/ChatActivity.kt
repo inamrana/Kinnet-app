@@ -91,7 +91,13 @@ class ChatActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        Push.openChatUid = otherUid
         markRead()
+    }
+
+    override fun onPause() {
+        if (Push.openChatUid == otherUid) Push.openChatUid = null
+        super.onPause()
     }
 
     // ---- header -------------------------------------------------------------------------

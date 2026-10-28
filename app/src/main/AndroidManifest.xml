@@ -158,6 +158,15 @@
         <!-- Close friends: who sees "Close friends" stories (extra screen) -->
         <activity android:name=".CloseFriendsActivity" />
 
+        <!-- Push notifications (FCM) for new messages, calls and screenshot alerts -->
+        <service
+            android:name=".KinnectMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- Lets the camera app save photos into our cache folder -->
         <provider
             android:name="androidx.core.content.FileProvider"

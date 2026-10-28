@@ -159,6 +159,7 @@ open class BaseActivity : AppCompatActivity() {
     /** Log out: mark offline, sign out of Firebase, back to Log in with an empty back stack. */
     protected fun logOut() {
         Presence.goOffline()
+        Db.uid?.let(Push::clearToken)
         Db.auth.signOut()
         val intent = Intent(this, LoginActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

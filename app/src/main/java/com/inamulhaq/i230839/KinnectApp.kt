@@ -16,6 +16,7 @@ class KinnectApp : Application() {
 
     private var startedScreens = 0
     private var callWatch: Watch? = null
+    private var messageWatch: Watch? = null
     private var watchedUid: String? = null
 
     /** True while any Kinnect screen is visible. */
@@ -48,8 +49,12 @@ class KinnectApp : Application() {
         if (uid == watchedUid) return
         callWatch?.stop()
         callWatch = null
+        messageWatch?.stop()
+        messageWatch = null
         watchedUid = uid
         uid ?: return
+        Push.saveToken()
+        watchNewMessages(uid)
         val pointer: DatabaseReference = Db.calls.child(uid)
         callWatch = Watch().on(pointer) { snapshot ->
             val callId = snapshot.getValue(String::class.java) ?: return@on
@@ -58,6 +63,7 @@ class KinnectApp : Application() {
                 val fresh = System.currentTimeMillis() - session.createdAt < CallSession.RING_TIMEOUT_MS
                 if (session.status != CallSession.STATUS_RINGING || session.calleeId != uid || !fresh) return@addOnSuccessListener
                 if (inForeground) {
+                    Notifier.cancelCall(this)
                     startActivity(
                         Intent(this, IncomingCallActivity::class.java)
                             .putExtra(CallScreenActivity.EXTRA_CALL_ID, callId)
@@ -69,6 +75,33 @@ class KinnectApp : Application() {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * In-app notification for a new message while you are on another Kinnect screen.
+     * (When the app is in the background, FCM delivers it through [KinnectMessagingService].)
+     */
+    private fun watchNewMessages(uid: String) {
+        val lastTimes = hashMapOf<String, Long>()
+        var baseline = true
+        messageWatch = Watch().on(Db.userChats.child(uid)) { snapshot ->
+            snapshot.children.forEach { child ->
+                val other = child.key ?: return@forEach
+                val summary = child.getValue(ChatSummary::class.java) ?: return@forEach
+                val previous = lastTimes.put(other, summary.lastTime)
+                val isNew = !baseline && summary.lastTime > (previous ?: 0L) && summary.unread > 0
+                if (isNew && inForeground && Push.openChatUid != other) {
+                    UserCache.get(other) { user ->
+                        val alert = summary.lastMessage.contains("took a screenshot")
+                        Notifier.message(
+                            this, other, user.fullName, summary.lastMessage,
+                            if (alert) Notifier.CHANNEL_ALERTS else Notifier.CHANNEL_MESSAGES
+                        )
+                    }
+                }
+            }
+            baseline = false
         }
     }
 }
