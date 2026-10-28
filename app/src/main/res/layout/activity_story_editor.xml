@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 10 · Story editor: tools along the top, text sticker, share targets at the bottom -->
+<!-- 10 · Story editor: the captured photo or video, text label, share to Your story or Close friends -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/editor_root"
@@ -12,6 +12,7 @@
     android:paddingEnd="8dp">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/story_card"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -19,12 +20,40 @@
         app:cardCornerRadius="18dp"
         app:cardElevation="0dp">
 
+        <!-- The story's photo or video -->
         <ImageView
+            android:id="@+id/story_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:scaleType="centerCrop"
-            android:src="@drawable/scene_green_tall" />
+            android:contentDescription="Story"
+            android:scaleType="centerCrop" />
+
+        <VideoView
+            android:id="@+id/story_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- Text label placed on the story; StoryLabel positions it -->
+        <TextView
+            android:id="@+id/story_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_sticker_white"
+            android:backgroundTint="@color/badge_red"
+            android:elevation="2dp"
+            android:fontFamily="@font/bricolage_extrabold"
+            android:includeFontPadding="false"
+            android:maxWidth="280dp"
+            android:paddingStart="18dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="12dp"
+            android:rotation="2"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/btn_close"
@@ -61,6 +90,7 @@
                 android:tint="@color/white" />
 
             <TextView
+                android:id="@+id/tool_text"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_marginStart="6dp"
@@ -68,6 +98,7 @@
                 android:backgroundTint="@color/glass_dark"
                 android:contentDescription="Add text"
                 android:fontFamily="@font/figtree_bold"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:gravity="center"
                 android:text="Aa"
                 android:textColor="@color/white"
@@ -113,26 +144,27 @@
                 android:tint="@color/white" />
         </LinearLayout>
 
-        <!-- Text sticker placed on the photo -->
         <TextView
+            android:id="@+id/editor_hint"
+            style="@style/Text.SemiBold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|start"
-            android:layout_marginStart="26dp"
-            android:background="@drawable/bg_sticker_white"
-            android:backgroundTint="@color/badge_red"
-            android:elevation="2dp"
-            android:fontFamily="@font/bricolage_extrabold"
-            android:includeFontPadding="false"
-            android:paddingStart="18dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="12dp"
-            android:rotation="2"
-            android:text="Saturday plans"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:shadowColor="#99000000"
+            android:shadowRadius="4"
+            android:text="Tap Aa to add text · drag it to move · tap it to change colour"
             android:textColor="@color/white"
-            android:textSize="24sp"
-            android:translationY="56dp" />
+            android:textSize="12sp" />
+
+        <!-- Shown while the story uploads -->
+        <ProgressBar
+            android:id="@+id/editor_progress"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/white"
+            android:visibility="gone" />
     </androidx.cardview.widget.CardView>
 
     <!-- Share targets -->
@@ -153,10 +185,10 @@
             android:orientation="horizontal">
 
             <TextView
+                android:id="@+id/share_avatar"
                 style="@style/Avatar"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:text="JW"
                 android:textSize="10sp" />
 
             <TextView

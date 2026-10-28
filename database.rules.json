@@ -113,6 +113,41 @@
           ".write": "auth != null && (auth.uid === $uid || (!data.exists() && newData.child('fromUid').val() === auth.uid))"
         }
       }
+    },
+    "stories": {
+      ".read": "auth != null",
+      "$owner": {
+        ".indexOn": [
+          "timestamp"
+        ],
+        "$storyId": {
+          ".write": "auth != null && auth.uid === $owner",
+          "viewers": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          },
+          "reactions": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          }
+        }
+      }
+    },
+    "storyMedia": {
+      ".read": "auth != null",
+      "$storyId": {
+        ".write": "auth != null && (newData.child('owner').val() === auth.uid || data.child('owner').val() === auth.uid)"
+      }
+    },
+    "closeFriends": {
+      "$uid": {
+        ".read": "auth != null",
+        "$friend": {
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      }
     }
   }
 }

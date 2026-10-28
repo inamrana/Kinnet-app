@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Camera (09) takes story photos and videos -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <!-- Photo picker reads the device gallery -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
@@ -131,6 +137,9 @@
             android:name=".MarketplaceActivity" />
 
         <!--ACTIVITIES-->
+        <!-- Close friends: who sees "Close friends" stories (extra screen) -->
+        <activity android:name=".CloseFriendsActivity" />
+
         <!-- Lets the camera app save photos into our cache folder -->
         <provider
             android:name="androidx.core.content.FileProvider"
