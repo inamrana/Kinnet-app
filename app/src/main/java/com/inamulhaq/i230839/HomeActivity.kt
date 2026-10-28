@@ -35,6 +35,7 @@ class HomeActivity : BaseActivity() {
         tapOpens(ProfileActivity::class.java, R.id.composer_avatar)
         tapOpens(CreatePostActivity::class.java, R.id.composer_input, R.id.composer_photo)
         tapOpens(CameraActivity::class.java, R.id.story_create)
+        askForNotifications()
 
         val me = Db.uid ?: return
         watch.on(Db.user(me)) { snapshot ->
@@ -72,6 +73,15 @@ class HomeActivity : BaseActivity() {
         }
         cards.keys.retainAll(visible.map { it.id }.toSet())
         findViewById<View>(R.id.feed_empty).visibility = if (visible.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    /** Android 13+ needs permission before Kinnect can show message and call notifications. */
+    private fun askForNotifications() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return
+        val permission = android.Manifest.permission.POST_NOTIFICATIONS
+        if (checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(permission), 0)
+        }
     }
 
     // ---- stories rail -------------------------------------------------------------------

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Video call (extra screen, Kinnect call design): the other person full screen, your
+     camera in a rounded corner card, and call controls -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/video_call_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/teal_dark">
+
+    <!-- Remote video -->
+    <FrameLayout
+        android:id="@+id/remote_video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Shown until the other person's video arrives -->
+    <LinearLayout
+        android:id="@+id/video_waiting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/call_avatar"
+            style="@style/Avatar"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:background="@drawable/bg_call_avatar"
+            android:backgroundTint="@color/av_purple"
+            android:textSize="42sp" />
+
+        <TextView
+            android:id="@+id/call_name"
+            style="@style/Text.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:textColor="@color/white"
+            android:textSize="28sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="34dp"
+        android:background="@drawable/bg_dark_pill"
+        android:backgroundTint="#66000000"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="6dp">
+
+        <ImageView
+            style="@style/Icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_lock"
+            android:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/call_status"
+            style="@style/Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="Calling…"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Your camera -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="112dp"
+        android:layout_height="160dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="84dp"
+        android:layout_marginEnd="16dp"
+        app:cardBackgroundColor="@color/dark_pill"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp">
+
+        <FrameLayout
+            android:id="@+id/local_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Controls: flip, mute, end, camera -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="54dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/btn_flip_camera"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_call_btn"
+            android:clickable="true"
+            android:contentDescription="Flip camera"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/btn_flip_camera_icon"
+                style="@style/Icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_flip"
+                android:tint="@color/white" />
+        </FrameLayout>
+
+        <Space
+            android:layout_width="22dp"
+            android:layout_height="1dp" />
+
+        <FrameLayout
+            android:id="@+id/btn_mute"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_call_btn"
+            android:clickable="true"
+            android:contentDescription="Mute"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/btn_mute_icon"
+                style="@style/Icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_mic"
+                android:tint="@color/white" />
+        </FrameLayout>
+
+        <Space
+            android:layout_width="22dp"
+            android:layout_height="1dp" />
+
+        <FrameLayout
+            android:id="@+id/btn_end_call"
+            android:layout_width="78dp"
+            android:layout_height="78dp"
+            android:background="@drawable/bg_end_call"
+            android:clickable="true"
+            android:contentDescription="@string/cd_end_call"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/btn_end_call_icon"
+                style="@style/Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:rotation="135"
+                android:src="@drawable/ic_phone"
+                android:tint="@color/white" />
+        </FrameLayout>
+
+        <Space
+            android:layout_width="22dp"
+            android:layout_height="1dp" />
+
+        <FrameLayout
+            android:id="@+id/btn_camera"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_call_btn"
+            android:clickable="true"
+            android:contentDescription="Turn camera off"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/btn_camera_icon"
+                style="@style/Icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_video"
+                android:tint="@color/white" />
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

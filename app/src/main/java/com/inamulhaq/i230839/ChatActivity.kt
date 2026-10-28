@@ -70,7 +70,8 @@ class ChatActivity : BaseActivity() {
         sendButton = findViewById(R.id.btn_send)
 
         tapCloses(R.id.btn_back)
-        tapOpens(VoiceCallActivity::class.java, R.id.btn_call, R.id.btn_video)
+        onTap(R.id.btn_call) { Calls.start(this, otherUid, video = false) }
+        onTap(R.id.btn_video) { Calls.start(this, otherUid, video = true) }
         onTap(R.id.btn_info) { PersonRow.openProfile(list, otherUid) }
         onTap(R.id.chat_header_avatar) { PersonRow.openProfile(list, otherUid) }
         onTap(R.id.reply_cancel) { clearComposerMode() }

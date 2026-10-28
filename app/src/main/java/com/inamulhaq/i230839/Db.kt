@@ -21,7 +21,8 @@ import com.google.firebase.database.FirebaseDatabase
  * storyMedia/{storyId}                -> Base64 photo or video of a story
  * closeFriends/{uid}/{friendUid}      -> true (who sees "Close friends" stories)
  * notifications/{uid}/{id}            -> [Notice] (Notifications tab)
- * calls/{uid}                         -> [CallInvite] ringing for that user
+ * callSessions/{callId}               -> [CallSession] (status of a call)
+ * calls/{uid}                         -> id of the call ringing for that user
  * callLogs/{uid}/{id}                 -> [CallLog]
  * fcmTokens/{uid}                     -> device token for push notifications
  */
@@ -47,6 +48,7 @@ object Db {
     val closeFriends: DatabaseReference get() = root.child("closeFriends")
     val notifications: DatabaseReference get() = root.child("notifications")
     val calls: DatabaseReference get() = root.child("calls")
+    val callSessions: DatabaseReference get() = root.child("callSessions")
     val callLogs: DatabaseReference get() = root.child("callLogs")
     val fcmTokens: DatabaseReference get() = root.child("fcmTokens")
 

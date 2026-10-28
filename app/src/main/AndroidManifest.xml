@@ -8,6 +8,13 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+    <!-- Agora calls -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Message / call notifications and the incoming call screen -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Photo picker reads the device gallery -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
@@ -137,6 +144,17 @@
             android:name=".MarketplaceActivity" />
 
         <!--ACTIVITIES-->
+        <!-- Video call and incoming call (extra screens) -->
+        <activity
+            android:name=".VideoCallActivity"
+            android:theme="@style/Theme.Kinnect.Dark" />
+        <activity
+            android:name=".IncomingCallActivity"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.Kinnect.Teal"
+            android:turnScreenOn="true" />
+
         <!-- Close friends: who sees "Close friends" stories (extra screen) -->
         <activity android:name=".CloseFriendsActivity" />
 
