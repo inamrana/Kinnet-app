@@ -107,4 +107,9 @@ class ChatsActivity : BaseActivity() {
         userWatches.values.forEach(Watch::stop)
         super.onDestroy()
     }
+
+    companion object {
+        /** Opens the list in "send this post" mode: tapping a chat shares the post there. */
+        const val EXTRA_SHARE_POST = "sharePostId"
+    }
 }

@@ -20,6 +20,7 @@
             style="@style/Icon"
             android:layout_width="22dp"
             android:layout_height="22dp"
+            android:id="@+id/action_like_icon"
             android:src="@drawable/ic_like"
             android:tint="@color/text_secondary" />
 
@@ -28,6 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:id="@+id/action_like_label"
             android:text="Like"
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />

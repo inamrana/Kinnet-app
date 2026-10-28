@@ -2,7 +2,7 @@ package com.inamulhaq.i230839
 
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.Query
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 
@@ -86,9 +86,10 @@ object Friends {
 
 /** Keeps track of value listeners so a screen can remove them all at once in onDestroy. */
 class Watch {
-    private val active = mutableListOf<Pair<DatabaseReference, ValueEventListener>>()
+    private val active = mutableListOf<Pair<Query, ValueEventListener>>()
 
-    fun on(ref: DatabaseReference, onData: (DataSnapshot) -> Unit): Watch {
+    /** Listens to [ref] (a path or a query) until [stop]. */
+    fun on(ref: Query, onData: (DataSnapshot) -> Unit): Watch {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) = onData(snapshot)
             override fun onCancelled(error: DatabaseError) = Unit

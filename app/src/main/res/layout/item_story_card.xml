@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One story on the Home rail: latest photo, ringed avatar overlapping the top-left, name -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/StoryCard">
+
+    <ImageView
+        android:id="@+id/story_image"
+        style="@style/StoryImage" />
+
+    <View style="@style/StoryShade" />
+
+    <TextView
+        android:id="@+id/story_avatar"
+        style="@style/StoryAvatar" />
+
+    <TextView
+        android:id="@+id/story_name"
+        style="@style/StoryName" />
+</androidx.cardview.widget.CardView>

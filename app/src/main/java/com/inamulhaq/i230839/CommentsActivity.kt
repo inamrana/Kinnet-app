@@ -11,4 +11,8 @@ class CommentsActivity : BaseActivity() {
 
         tapCloses(R.id.btn_back)
     }
+
+    companion object {
+        const val EXTRA_POST_ID = "postId"
+    }
 }

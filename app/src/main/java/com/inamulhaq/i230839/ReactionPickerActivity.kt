@@ -15,4 +15,8 @@ class ReactionPickerActivity : BaseActivity() {
             R.id.react_wow, R.id.react_sad, R.id.react_angry
         )
     }
+
+    companion object {
+        const val EXTRA_POST_ID = "postId"
+    }
 }
