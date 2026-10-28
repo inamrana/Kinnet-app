@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 05 · Reaction picker: Lina's post dimmed by a scrim, with the reaction bar
+<!-- 05 · Reaction picker: the post dimmed by a scrim, with the reaction bar
      overlapping the bottom edge of the photo and "Love" raised with its tooltip -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -40,10 +40,11 @@
 
                 <TextView
                     style="@style/Text.Title"
+                    android:id="@+id/post_header_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Lina's post"
+                    android:text="Post"
                     android:textSize="21sp" />
             </LinearLayout>
 
@@ -53,7 +54,7 @@
                 android:layout_width="match_parent" />
 
             <include
-                android:id="@+id/post_author"
+                android:id="@+id/post_author_row"
                 layout="@layout/view_post_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
@@ -67,7 +68,6 @@
                 android:lineSpacingExtra="4dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="@string/post_body"
                 android:textSize="16sp" />
         </LinearLayout>
 
@@ -76,10 +76,10 @@
             android:layout_width="0dp"
             android:layout_height="327dp"
             android:layout_marginTop="12dp"
-            android:contentDescription="Beach photo"
+            android:background="@color/surface_pill"
+            android:contentDescription="Post photo"
             android:cropToPadding="true"
             android:scaleType="centerCrop"
-            android:src="@drawable/scene_sand"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/post_top" />
@@ -103,15 +103,17 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
+                android:id="@+id/post_reaction_text"
                 android:layout_weight="1"
-                android:text="Aisha Khan and 1.2K others"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textSize="15sp" />
 
             <TextView
                 style="@style/Text.Secondary"
                 android:layout_width="wrap_content"
+                android:id="@+id/post_comment_count"
                 android:layout_height="wrap_content"
-                android:text="86 comments"
                 android:textSize="15sp" />
         </LinearLayout>
 
@@ -182,9 +184,8 @@
             <TextView
                 style="@style/Avatar"
                 android:layout_width="32dp"
+                android:id="@+id/first_comment_avatar"
                 android:layout_height="32dp"
-                android:backgroundTint="@color/av_crimson"
-                android:text="AK"
                 android:textSize="11sp" />
 
             <LinearLayout
@@ -201,15 +202,15 @@
                 <TextView
                     style="@style/Text.Bold"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Aisha Khan" />
+                    android:id="@+id/first_comment_name"
+                    android:layout_height="wrap_content" />
 
                 <TextView
                     style="@style/Text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="That sky is unreal." />
+                    android:id="@+id/first_comment_text"
+                    android:layout_marginTop="3dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -226,6 +227,24 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Tooltip naming your current reaction; moved over that icon in code -->
+        <TextView
+            android:id="@+id/reaction_tooltip"
+            style="@style/Text.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="26dp"
+            android:layout_marginBottom="22dp"
+            android:background="@drawable/bg_tooltip"
+            android:elevation="9dp"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/reaction_bar"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <!-- ===== Reaction bar, centred on the photo's bottom edge ===== -->
         <LinearLayout
@@ -251,36 +270,11 @@
                 android:contentDescription="Like"
                 android:src="@drawable/react_like" />
 
-            <!-- Love is focused: bigger, lifted above the bar, with a tooltip -->
-            <LinearLayout
-                android:layout_width="62dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:translationY="-34dp">
-
-                <TextView
-                    style="@style/Text.Bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:background="@drawable/bg_tooltip"
-                    android:gravity="center"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:text="Love"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
-
-                <ImageView
-                    android:id="@+id/react_love"
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
-                    android:layout_marginTop="6dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Love"
-                    android:src="@drawable/react_love" />
-            </LinearLayout>
+            <ImageView
+                android:id="@+id/react_love"
+                style="@style/ReactionIcon"
+                android:contentDescription="Love"
+                android:src="@drawable/react_love" />
 
             <ImageView
                 android:id="@+id/react_haha"
