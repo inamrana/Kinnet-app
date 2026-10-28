@@ -25,7 +25,8 @@ import java.util.Locale
  *
  * Send text, photos or shared posts, reply to a message, heart a message, and edit / delete your own
  * messages for 5 minutes after sending (long press). The header shows "Active now" live.
- * The phone and video icons start a call.
+ * The phone and video icons start a call. Taking a screenshot posts "<name> took a screenshot"
+ * in the chat and notifies the other person.
  */
 class ChatActivity : BaseActivity() {
 
@@ -44,6 +45,10 @@ class ChatActivity : BaseActivity() {
     private val views = hashMapOf<String, View>()
     private var messagesQuery: Query? = null
     private var replyTo: Message? = null
+    private val screenshots by lazy { ScreenshotDetector(this) { onScreenshot() } }
+    private val askGalleryAccess = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { }
     private var editing: Message? = null
 
     private val messageListener = object : ChildEventListener {
@@ -78,6 +83,11 @@ class ChatActivity : BaseActivity() {
         onTap(R.id.btn_send_image) { pickImage { sendMessage(Message.TYPE_IMAGE, image = it) } }
         onTap(R.id.btn_send) { onSendTapped() }
         input.doAfterTextChanged { updateSendIcon() }
+        UserCache.get(me) { }
+        // Before Android 14, spotting screenshots needs read access to the gallery
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+            Gallery.permissions().none { checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
+        ) askGalleryAccess.launch(Gallery.permissions())
         findViewById<View>(R.id.chat_intro_date).visibility = View.GONE
 
         watch.on(Db.user(otherUid)) { snapshot -> snapshot.getValue(User::class.java)?.let(::showOther) }
@@ -87,6 +97,23 @@ class ChatActivity : BaseActivity() {
         }
         messagesQuery = Db.messages(chatId).orderByChild("timestamp").limitToLast(MAX_MESSAGES)
             .also { it.addChildEventListener(messageListener) }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        screenshots.start()
+    }
+
+    override fun onStop() {
+        screenshots.stop()
+        super.onStop()
+    }
+
+    /** Lets the other person know, as in the design's "Aisha took a screenshot". */
+    private fun onScreenshot() {
+        val name = UserCache.peek(me)?.firstName?.ifEmpty { null } ?: "Someone"
+        val text = "$name took a screenshot"
+        ChatSender.send(otherUid, Message.TYPE_SYSTEM, text = text, preview = text)
     }
 
     override fun onResume() {
