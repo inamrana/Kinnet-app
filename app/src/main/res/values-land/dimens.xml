@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Landscape: keep more of the gallery grid visible -->
+    <dimen name="picker_preview_height">140dp</dimen>
+</resources>

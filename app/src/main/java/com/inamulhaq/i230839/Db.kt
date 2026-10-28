@@ -14,6 +14,16 @@ import com.google.firebase.database.FirebaseDatabase
  * friends/{uid}/{friendUid}           -> time they became friends
  * chats/{chatId}/messages/{id}        -> [Message]
  * userChats/{uid}/{otherUid}          -> [ChatSummary] (the Chats list)
+ * posts/{postId}                      -> [Post]
+ * postImages/{postId}/{index}         -> Base64 JPEG of each photo in a post
+ * comments/{postId}/{commentId}       -> [Comment]
+ * stories/{ownerUid}/{storyId}        -> [Story] (shown for 24 hours)
+ * storyMedia/{storyId}                -> Base64 photo or video of a story
+ * closeFriends/{uid}/{friendUid}      -> true (who sees "Close friends" stories)
+ * notifications/{uid}/{id}            -> [Notice] (Notifications tab)
+ * calls/{uid}                         -> [CallInvite] ringing for that user
+ * callLogs/{uid}/{id}                 -> [CallLog]
+ * fcmTokens/{uid}                     -> device token for push notifications
  */
 object Db {
 
@@ -29,6 +39,16 @@ object Db {
     val friends: DatabaseReference get() = root.child("friends")
     val chats: DatabaseReference get() = root.child("chats")
     val userChats: DatabaseReference get() = root.child("userChats")
+    val posts: DatabaseReference get() = root.child("posts")
+    val postImages: DatabaseReference get() = root.child("postImages")
+    val comments: DatabaseReference get() = root.child("comments")
+    val stories: DatabaseReference get() = root.child("stories")
+    val storyMedia: DatabaseReference get() = root.child("storyMedia")
+    val closeFriends: DatabaseReference get() = root.child("closeFriends")
+    val notifications: DatabaseReference get() = root.child("notifications")
+    val calls: DatabaseReference get() = root.child("calls")
+    val callLogs: DatabaseReference get() = root.child("callLogs")
+    val fcmTokens: DatabaseReference get() = root.child("fcmTokens")
 
     /** Writes several paths at once (all succeed or none do). Keys are full paths like "friends/a/b". */
     fun update(paths: Map<String, Any?>) = root.updateChildren(paths)
@@ -41,7 +61,7 @@ object Db {
     fun messages(chatId: String): DatabaseReference = chats.child(chatId).child("messages")
 }
 
-/** One message in chats/{chatId}/messages. [type] is "text", "image" or "system". */
+/** One message in chats/{chatId}/messages. [type] is "text", "image", "post" or "system". */
 data class Message(
     val id: String = "",
     val senderId: String = "",
@@ -51,6 +71,7 @@ data class Message(
     val replyToId: String = "",
     val replyToText: String = "",
     val replyToSender: String = "",
+    val postId: String = "",
     val edited: Boolean = false,
     val hearts: Map<String, Boolean> = emptyMap(),
     val timestamp: Long = 0L,
@@ -59,6 +80,7 @@ data class Message(
         const val TYPE_TEXT = "text"
         const val TYPE_IMAGE = "image"
         const val TYPE_SYSTEM = "system"
+        const val TYPE_POST = "post"
 
         /** Own messages can be edited or deleted for this long after sending. */
         const val EDIT_WINDOW_MS = 5 * 60 * 1000L

@@ -287,4 +287,25 @@
         <item name="android:layout_weight">1</item>
         <item name="android:background">?attr/selectableItemBackground</item>
     </style>
+
+    <!-- Photo picker source tabs -->
+    <style name="PickerTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+    <style name="PickerTabLine">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">3dp</item>
+        <item name="android:background">@color/teal</item>
+        <item name="android:visibility">invisible</item>
+    </style>
+    <style name="PickerTabLabel" parent="Text.Bold">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">17sp</item>
+    </style>
 </resources>

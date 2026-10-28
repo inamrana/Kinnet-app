@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One square cell of the Photo picker grid -->
+<com.inamulhaq.i230839.SquareFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="1.5dp">
+
+    <ImageView
+        android:id="@+id/gallery_thumb"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface_pill"
+        android:contentDescription="Gallery item"
+        android:cropToPadding="true"
+        android:scaleType="centerCrop" />
+
+    <!-- Teal border on the focused item -->
+    <View
+        android:id="@+id/gallery_focus"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_selected_photo"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/gallery_ring"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="6dp"
+        android:background="@drawable/bg_select_ring" />
+
+    <TextView
+        android:id="@+id/gallery_number"
+        style="@style/Text.Bold"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="5dp"
+        android:background="@drawable/bg_select_num"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/gallery_duration"
+        style="@style/Text.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="6dp"
+        android:shadowColor="#80000000"
+        android:shadowRadius="3"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:visibility="gone" />
+</com.inamulhaq.i230839.SquareFrameLayout>

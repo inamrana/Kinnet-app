@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Folders the app shares with the camera app (photos taken for posts) -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+    <cache-path name="media" path="media/" />
+</paths>

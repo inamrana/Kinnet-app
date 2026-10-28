@@ -64,6 +64,7 @@
                 android:paddingEnd="16dp">
 
                 <TextView
+                    android:id="@+id/create_avatar"
                     style="@style/Avatar"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
@@ -77,6 +78,7 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/create_name"
                         style="@style/Text.Bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -177,11 +179,11 @@
                 android:lineSpacingExtra="4dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="Weekend plan: coffee, sketching, and absolutely no email."
                 android:textSize="22sp" />
 
             <!-- Background colour swatches -->
             <LinearLayout
+                android:id="@+id/swatch_row"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="36dp"
@@ -189,6 +191,7 @@
                 android:paddingStart="16dp">
 
                 <TextView
+                    android:id="@+id/swatch_0"
                     style="@style/Text.Bold"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
@@ -198,6 +201,7 @@
                     android:textSize="13sp" />
 
                 <View
+                    android:id="@+id/swatch_1"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
@@ -205,6 +209,7 @@
                     android:backgroundTint="@color/teal" />
 
                 <View
+                    android:id="@+id/swatch_2"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
@@ -212,6 +217,7 @@
                     android:backgroundTint="@color/sw_orange" />
 
                 <View
+                    android:id="@+id/swatch_3"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
@@ -219,6 +225,7 @@
                     android:backgroundTint="@color/av_indigo" />
 
                 <View
+                    android:id="@+id/swatch_4"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
@@ -226,6 +233,7 @@
                     android:backgroundTint="@color/av_green" />
 
                 <View
+                    android:id="@+id/swatch_5"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
@@ -233,6 +241,7 @@
                     android:backgroundTint="@color/gold" />
 
                 <View
+                    android:id="@+id/swatch_6"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
@@ -240,12 +249,32 @@
                     android:backgroundTint="@color/av_purple" />
 
                 <View
+                    android:id="@+id/swatch_7"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginStart="9dp"
                     android:background="@drawable/bg_swatch"
                     android:backgroundTint="@color/sw_black" />
             </LinearLayout>
+
+            <!-- Photos chosen in the Photo picker or taken with the camera -->
+            <HorizontalScrollView
+                android:id="@+id/selected_photos_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/selected_photos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
 
             <View
                 android:layout_width="match_parent"

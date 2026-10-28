@@ -2,7 +2,11 @@
   "rules": {
     "users": {
       ".read": "auth != null",
-      ".indexOn": ["username", "nameLower", "createdAt"],
+      ".indexOn": [
+        "username",
+        "nameLower",
+        "createdAt"
+      ],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid"
       }
@@ -42,7 +46,9 @@
         ".read": "auth != null && $chatId.contains(auth.uid)",
         ".write": "auth != null && $chatId.contains(auth.uid)",
         "messages": {
-          ".indexOn": ["timestamp"]
+          ".indexOn": [
+            "timestamp"
+          ]
         }
       }
     },
@@ -52,6 +58,33 @@
         "$other": {
           ".write": "auth != null && (auth.uid === $uid || auth.uid === $other)"
         }
+      }
+    },
+    "posts": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "timestamp",
+        "authorId"
+      ],
+      "$postId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('authorId').val() === auth.uid) || data.child('authorId').val() === auth.uid)",
+        "reactions": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "commentCount": {
+          ".write": "auth != null"
+        },
+        "shareCount": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "postImages": {
+      ".read": "auth != null",
+      "$postId": {
+        ".write": "auth != null && newData.parent().parent().child('posts').child($postId).child('authorId').val() === auth.uid"
       }
     }
   }
