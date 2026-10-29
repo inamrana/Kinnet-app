@@ -8,7 +8,7 @@ import com.google.firebase.database.FirebaseDatabase
  * One place for every Realtime Database path Kinnect uses.
  *
  * users/{uid}                         -> [User]
- * usernames/{username}                -> uid (keeps usernames unique)
+ * usernames/{usernameKey}             -> uid (keeps usernames unique; see [usernameKey])
  * friendRequests/{toUid}/{fromUid}    -> time the request was sent (incoming requests)
  * sentRequests/{fromUid}/{toUid}      -> time (outgoing requests, for the "Requested" state)
  * friends/{uid}/{friendUid}           -> time they became friends
@@ -54,6 +54,9 @@ object Db {
 
     /** Writes several paths at once (all succeed or none do). Keys are full paths like "friends/a/b". */
     fun update(paths: Map<String, Any?>) = root.updateChildren(paths)
+
+    /** Database keys cannot contain ".", so "jacob.west" is stored as "jacob,west". */
+    fun usernameKey(username: String): String = username.replace('.', ',')
 
     fun user(uid: String): DatabaseReference = users.child(uid)
     fun me(): DatabaseReference? = uid?.let(::user)

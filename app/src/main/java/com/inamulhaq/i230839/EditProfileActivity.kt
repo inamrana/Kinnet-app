@@ -94,7 +94,7 @@ class EditProfileActivity : BaseActivity() {
         } else {
             claimUsername(uid, newUsername) { claimed ->
                 if (claimed) {
-                    if (current.username.isNotEmpty()) Db.usernames.child(current.username).removeValue()
+                    if (current.username.isNotEmpty()) Db.usernames.child(Db.usernameKey(current.username)).removeValue()
                     saveFields(uid, newName, newUsername)
                 } else {
                     findViewById<View>(R.id.btn_save).isEnabled = true
@@ -106,7 +106,7 @@ class EditProfileActivity : BaseActivity() {
 
     /** Atomically reserves usernames/{name} for [uid]; fails if someone else already owns it. */
     private fun claimUsername(uid: String, name: String, done: (Boolean) -> Unit) {
-        Db.usernames.child(name).runTransaction(object : Transaction.Handler {
+        Db.usernames.child(Db.usernameKey(name)).runTransaction(object : Transaction.Handler {
             override fun doTransaction(data: MutableData): Transaction.Result {
                 val owner = data.getValue(String::class.java)
                 if (owner != null && owner != uid) return Transaction.abort()
