@@ -325,7 +325,8 @@
                 android:paddingEnd="16dp">
 
                 <TextView
-                    style="@style/Text.Section"
+                    android:id="@+id/other_photos_title"
+style="@style/Text.Section"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -358,7 +359,8 @@
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:contentDescription="Omar's photo 1"
+                        android:id="@+id/other_photo_1"
+                        android:contentDescription="Photo 1"
                         android:scaleType="centerCrop"
                         android:src="@drawable/scene_night" />
                 </androidx.cardview.widget.CardView>
@@ -374,7 +376,8 @@
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:contentDescription="Omar's photo 2"
+                        android:id="@+id/other_photo_2"
+                        android:contentDescription="Photo 2"
                         android:scaleType="centerCrop"
                         android:src="@drawable/scene_lavender" />
                 </androidx.cardview.widget.CardView>
@@ -390,7 +393,8 @@
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:contentDescription="Omar's photo 3"
+                        android:id="@+id/other_photo_3"
+                        android:contentDescription="Photo 3"
                         android:scaleType="centerCrop"
                         android:src="@drawable/scene_blue" />
                 </androidx.cardview.widget.CardView>

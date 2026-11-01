@@ -42,6 +42,32 @@ class OtherProfileActivity : BaseActivity() {
         watch.on(Db.user(uid)) { snapshot -> snapshot.getValue(User::class.java)?.let(::showUser) }
         watch.on(Db.friends.child(uid)) { snapshot -> showCounts(me, snapshot.children.mapNotNull { it.key }) }
         stateWatch = Friends.watchState(uid, ::showState)
+        watch.on(Db.posts.orderByChild("authorId").equalTo(uid)) { snapshot ->
+            val withPhotos = snapshot.children.mapNotNull { child ->
+                child.getValue(Post::class.java)?.copy(id = child.key.orEmpty())
+            }.filter { it.imageCount > 0 }.sortedByDescending { it.timestamp }
+            showPhotos(withPhotos)
+        }
+    }
+
+    /** The Photos row shows the first photo of their three newest photo posts; tapping one opens it. */
+    private fun showPhotos(posts: List<Post>) {
+        val header = findViewById<View>(R.id.other_photos_title).parent as View
+        val slots = listOf(R.id.other_photo_1, R.id.other_photo_2, R.id.other_photo_3)
+            .map { findViewById<ImageView>(it) }
+        val grid = (slots[0].parent as View).parent as View
+        header.visibility = if (posts.isEmpty()) View.GONE else View.VISIBLE
+        grid.visibility = header.visibility
+
+        slots.forEachIndexed { index, image ->
+            val card = image.parent as View
+            val post = posts.getOrNull(index)
+            card.visibility = if (post == null) View.INVISIBLE else View.VISIBLE
+            if (post == null) return@forEachIndexed
+            image.setImageDrawable(null)
+            card.setOnClickListener { PostCard.openComments(this, post.id) }
+            PostImages.get(post.id) { images -> images.firstOrNull()?.let { Images.show(image, it) } }
+        }
     }
 
     private fun showUser(user: User) {
