@@ -26,6 +26,7 @@ import com.google.firebase.database.FirebaseDatabase
  * callLogs/{uid}/{id}                 -> [CallLog]
  * fcmTokens/{uid}                     -> device token for push notifications
  * marketplace/{listingId}             -> [Listing] (Marketplace "Today's picks")
+ * recentSearches/{uid}/{key}          -> text + time (Search "Recent searches")
  */
 object Db {
 
@@ -53,6 +54,7 @@ object Db {
     val callLogs: DatabaseReference get() = root.child("callLogs")
     val fcmTokens: DatabaseReference get() = root.child("fcmTokens")
     val marketplace: DatabaseReference get() = root.child("marketplace")
+    val recentSearches: DatabaseReference get() = root.child("recentSearches")
 
     /** Writes several paths at once (all succeed or none do). Keys are full paths like "friends/a/b". */
     fun update(paths: Map<String, Any?>) = root.updateChildren(paths)

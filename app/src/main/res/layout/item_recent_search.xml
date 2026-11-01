@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One recent search: clock icon, the text searched, and an X to remove it -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="12dp">
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_circle"
+        android:backgroundTint="@color/surface_pill"
+        android:importantForAccessibility="no"
+        android:padding="10dp"
+        android:src="@drawable/ic_clock"
+        android:tint="@color/text_secondary" />
+
+    <TextView
+        android:id="@+id/recent_text"
+        style="@style/Text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="16sp" />
+
+    <ImageView
+        android:id="@+id/recent_remove"
+        style="@style/Icon.Touch"
+        android:contentDescription="Remove search"
+        android:src="@drawable/ic_close"
+        android:tint="@color/text_secondary" />
+</LinearLayout>

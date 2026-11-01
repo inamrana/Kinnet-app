@@ -157,66 +157,9 @@
                 android:layout_marginEnd="16dp"
                 android:text="See all people" />
 
+            <!-- Recent searches: saved per user under recentSearches/{uid} -->
             <TextView
-                style="@style/Text.Section"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="20dp"
-                android:text="Groups" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <TextView
-                    style="@style/Avatar"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:background="@drawable/bg_rounded_12"
-                    android:backgroundTint="@color/av_purple"
-                    android:text="OP"
-                    android:textSize="18sp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Text.Bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="Omar's Photography Circle"
-                        android:textSize="17sp" />
-
-                    <TextView
-                        style="@style/Text.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="Public · 2.4K members · 10+ posts a day" />
-                </LinearLayout>
-
-                <Button
-                    style="@style/Button.PrimarySquare"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="10dp"
-                    android:text="Join" />
-            </LinearLayout>
-
-            <TextView
+                android:id="@+id/recent_title"
                 style="@style/Text.Section"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -224,112 +167,12 @@
                 android:layout_marginTop="14dp"
                 android:text="Recent searches" />
 
-            <Space android:layout_width="match_parent" android:layout_height="6dp" />
-
             <LinearLayout
+                android:id="@+id/recent_list"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="12dp">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_circle"
-                    android:backgroundTint="@color/surface_pill"
-                    android:importantForAccessibility="no"
-                    android:padding="10dp"
-                    android:src="@drawable/ic_clock"
-                    android:tint="@color/text_secondary" />
-
-                <TextView
-                    style="@style/Text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:text="lina marsh"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    style="@style/Icon.Touch"
-                    android:contentDescription="Remove lina marsh"
-                    android:src="@drawable/ic_close"
-                    android:tint="@color/text_secondary" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="12dp">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_circle"
-                    android:backgroundTint="@color/surface_pill"
-                    android:importantForAccessibility="no"
-                    android:padding="10dp"
-                    android:src="@drawable/ic_clock"
-                    android:tint="@color/text_secondary" />
-
-                <TextView
-                    style="@style/Text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:text="study desk karachi"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    style="@style/Icon.Touch"
-                    android:contentDescription="Remove study desk karachi"
-                    android:src="@drawable/ic_close"
-                    android:tint="@color/text_secondary" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="12dp">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_circle"
-                    android:backgroundTint="@color/surface_pill"
-                    android:importantForAccessibility="no"
-                    android:padding="10dp"
-                    android:src="@drawable/ic_clock"
-                    android:tint="@color/text_secondary" />
-
-                <TextView
-                    style="@style/Text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:text="SMD Class of 2026"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    style="@style/Icon.Touch"
-                    android:contentDescription="Remove SMD Class of 2026"
-                    android:src="@drawable/ic_close"
-                    android:tint="@color/text_secondary" />
-            </LinearLayout>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
