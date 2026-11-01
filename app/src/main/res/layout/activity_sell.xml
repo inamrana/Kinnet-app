@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sell an item (extra screen in the Kinnect style): photo, title, price, category, area -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/sell_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:id="@+id/btn_cancel"
+            style="@style/Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|start"
+            android:padding="4dp"
+            android:text="Cancel"
+            android:textSize="16sp" />
+
+        <TextView
+            style="@style/Text.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Sell an item"
+            android:textSize="21sp" />
+
+        <TextView
+            android:id="@+id/btn_publish"
+            style="@style/Text.Link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:padding="4dp"
+            android:text="Publish"
+            android:textSize="17sp" />
+    </FrameLayout>
+
+    <View style="@style/Divider" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
+
+            <!-- Photo: tap to choose from the gallery -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/sell_photo_card"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/surface_pill"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp">
+
+                <ImageView
+                    android:id="@+id/sell_photo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Item photo"
+                    android:scaleType="centerCrop" />
+
+                <LinearLayout
+                    android:id="@+id/sell_photo_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="@color/teal_light"
+                        android:importantForAccessibility="no"
+                        android:padding="14dp"
+                        android:src="@drawable/ic_camera"
+                        android:tint="@color/teal" />
+
+                    <TextView
+                        style="@style/Text.Bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Add a photo"
+                        android:textSize="16sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <LinearLayout
+                style="@style/InputBox"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    style="@style/InputLabel"
+                    android:text="Title" />
+
+                <EditText
+                    android:id="@+id/input_title"
+                    style="@style/InputField"
+                    android:hint="What are you selling?"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences"
+                    android:maxLength="60" />
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/InputBox"
+                android:layout_marginTop="13dp">
+
+                <TextView
+                    style="@style/InputLabel"
+                    android:text="Price (Rs)" />
+
+                <EditText
+                    android:id="@+id/input_price"
+                    style="@style/InputField"
+                    android:hint="0"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:maxLength="9" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/sell_category_box"
+                style="@style/InputBox"
+                android:layout_marginTop="13dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <TextView
+                    style="@style/InputLabel"
+                    android:text="Category" />
+
+                <TextView
+                    android:id="@+id/sell_category"
+                    style="@style/InputField"
+                    android:text="Other" />
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/InputBox"
+                android:layout_marginTop="13dp">
+
+                <TextView
+                    style="@style/InputLabel"
+                    android:text="Area" />
+
+                <EditText
+                    android:id="@+id/input_location"
+                    style="@style/InputField"
+                    android:hint="e.g. Clifton"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapWords"
+                    android:maxLength="40" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Text.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Buyers can message you from your listing."
+                android:textSize="14sp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

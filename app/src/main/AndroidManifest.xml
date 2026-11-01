@@ -145,6 +145,11 @@
         <activity
             android:name=".MarketplaceActivity" />
 
+        <!-- Sell an item (extra screen for Marketplace) -->
+        <activity
+            android:name=".SellActivity"
+            android:windowSoftInputMode="adjustResize" />
+
         <!--ACTIVITIES-->
         <!-- Video call and incoming call (extra screens) -->
         <activity
