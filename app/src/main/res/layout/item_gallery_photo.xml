@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- One square cell of the Photo picker grid -->
-<com.inamulhaq.i230839.SquareFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.kinnect.i230577_i230839.SquareFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="1.5dp">
@@ -55,4 +55,4 @@
         android:textColor="@color/white"
         android:textSize="13sp"
         android:visibility="gone" />
-</com.inamulhaq.i230839.SquareFrameLayout>
+</com.kinnect.i230577_i230839.SquareFrameLayout>

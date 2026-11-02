@@ -12,13 +12,13 @@ val agoraProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.inamulhaq.i230839"
+    namespace = "com.kinnect.i230577_i230839"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.inamulhaq.i230839"
+        applicationId = "com.kinnect.i230577_i230839"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

@@ -9,7 +9,7 @@ and video calls.
 These files hold keys and are **not** in the repository. Every team member adds their own copy.
 
 1. **Firebase config.** In the Firebase console open the project, add an Android app with package
-   `com.inamulhaq.i230839`, download `google-services.json` and put it in `app/`.
+   `com.kinnect.i230577_i230839`, download `google-services.json` and put it in `app/`.
 2. **Authentication.** Firebase console → Authentication → Sign-in method → enable **Email/Password**.
 3. **Realtime Database.** Create a database, then open **Rules** and paste the contents of
    [`database.rules.json`](database.rules.json). Search, Marketplace and the feed need the indexes in it.
