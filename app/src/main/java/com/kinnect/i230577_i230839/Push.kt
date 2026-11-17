@@ -4,21 +4,18 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-/** Keeps this device's FCM token in fcmTokens/{uid} so the Cloud Function can reach it. */
+/** Keeps this device's FCM token on the Kinnect server so the PHP backend can push to it. */
 object Push {
 
     /** Which chat is open right now, so we don't notify about messages you are already reading. */
     @Volatile var openChatUid: String? = null
 
+    /** Sends this device's FCM token to the PHP backend, which uses it to push notifications. */
     fun saveToken() {
-        val me = Db.uid ?: return
+        if (!Session.isLoggedIn) return
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-            Db.fcmTokens.child(me).setValue(token)
+            Api.post("fcm/token.php", mapOf("token" to token)) {}
         }
-    }
-
-    fun clearToken(uid: String) {
-        Db.fcmTokens.child(uid).removeValue()
     }
 }
 
@@ -30,8 +27,7 @@ object Push {
 class KinnectMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
-        val me = Db.uid ?: return
-        Db.fcmTokens.child(me).setValue(token)
+        if (Session.isLoggedIn) Api.post("fcm/token.php", mapOf("token" to token)) {}
     }
 
     override fun onMessageReceived(message: RemoteMessage) {

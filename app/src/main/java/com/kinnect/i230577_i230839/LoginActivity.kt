@@ -8,7 +8,8 @@ import android.widget.EditText
 import android.widget.TextView
 
 /**
- * 02 · Log in — Firebase email/password sign in.
+ * 02 · Log in — email and password checked by the Kinnect web service (auth/login.php),
+ * which returns a session token that is stored encrypted on the device.
  * The Recent login card shows the last account used on this device; tapping it pre-fills the email.
  */
 class LoginActivity : BaseActivity() {
@@ -58,23 +59,24 @@ class LoginActivity : BaseActivity() {
         }
 
         loginButton.isEnabled = false
-        Db.auth.signInWithEmailAndPassword(mail, pass)
-            .addOnSuccessListener { afterSignIn() }
-            .addOnFailureListener {
+        Api.post("auth/login.php", mapOf("email" to mail, "password" to pass)) { result ->
+            val json = result.json
+            if (!result.ok || json == null) {
                 loginButton.isEnabled = true
-                toast(it.localizedMessage ?: "Log in failed")
+                toast(if (result.offline) "You're offline. Connect to log in." else result.message)
+                return@post
             }
+            signedIn(json.getString("token"), json.getJSONObject("user").toUser())
+        }
     }
 
-    /** Loads the profile, remembers it as the recent login, then goes to setup or Home. */
-    private fun afterSignIn() {
-        val me = Db.me() ?: return
-        me.get().addOnCompleteListener { task ->
-            val user = if (task.isSuccessful) task.result.getValue(User::class.java) else null
-            if (user != null) RecentLogin(this).save(user)
-            Presence.goOnline()
-            if (user?.profileComplete == true) enterHome() else enterProfileSetup()
-        }
+    /** Stores the session, remembers the recent login, then goes to setup or Home. */
+    private fun signedIn(token: String, user: User) {
+        Session.save(token, user)
+        RecentLogin(this).save(user)
+        (application as KinnectApp).onSignedIn()
+        Push.saveToken()
+        if (user.profileComplete) enterHome() else enterProfileSetup()
     }
 
     private fun sendPasswordReset() {
@@ -83,8 +85,6 @@ class LoginActivity : BaseActivity() {
             email.error = "Enter your email first"
             return
         }
-        Db.auth.sendPasswordResetEmail(mail)
-            .addOnSuccessListener { toast("Password reset email sent") }
-            .addOnFailureListener { toast(it.localizedMessage ?: "Could not send reset email") }
+        toast("Ask your Kinnect admin to reset the password for $mail")
     }
 }

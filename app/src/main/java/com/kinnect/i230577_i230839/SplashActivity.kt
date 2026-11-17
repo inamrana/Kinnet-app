@@ -4,18 +4,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 
-/** 01 · Splash — shows the brand for 5 seconds, then opens Home if signed in, otherwise Log in. */
+/**
+ * 01 · Splash — shows the brand for 5 seconds, then opens Home if a session token is stored on
+ * this device (this works offline too), otherwise Log in. If the server later says the token is no
+ * longer valid, [Api.onUnauthorized] sends the user back to Log in.
+ */
 class SplashActivity : BaseActivity() {
 
     private val handler = Handler(Looper.getMainLooper())
     private val openNext = Runnable {
-        val me = Db.me()
-        if (me != null) {
+        if (Session.isLoggedIn) {
             // Signed in: straight to Home (or finish the profile setup if it was skipped)
-            me.child("profileComplete").get().addOnCompleteListener { task ->
-                val complete = if (task.isSuccessful) task.result.getValue(Boolean::class.java) else null
-                if (complete == false) enterProfileSetup() else enterHome()
-            }
+            if (Session.user?.profileComplete == false) enterProfileSetup() else enterHome()
         } else {
             open(LoginActivity::class.java)
             finish() // Splash is not kept in the back stack

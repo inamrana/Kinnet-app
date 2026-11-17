@@ -1,6 +1,5 @@
 package com.kinnect.i230577_i230839
 
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
@@ -30,8 +29,8 @@ import com.google.firebase.database.FirebaseDatabase
  */
 object Db {
 
-    val auth: FirebaseAuth get() = FirebaseAuth.getInstance()
-    val uid: String? get() = auth.currentUser?.uid
+    /** The signed-in user, from the session token issued by the PHP backend. */
+    val uid: String? get() = Session.uid
 
     private val root: DatabaseReference get() = FirebaseDatabase.getInstance().reference
 

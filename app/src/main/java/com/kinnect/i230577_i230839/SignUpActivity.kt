@@ -11,12 +11,11 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
-import com.google.firebase.database.ServerValue
 import java.text.DateFormatSymbols
 import java.util.Calendar
 
 /**
- * 03 · Sign up — creates a Firebase account and saves the user to users/{uid}.
+ * 03 · Sign up — creates the account through auth/signup.php (the server stores it in MySQL).
  * The password strength meter updates as the user types.
  * New users then go to Edit profile (setup) to choose a username and bio.
  */
@@ -101,39 +100,31 @@ class SignUpActivity : BaseActivity() {
         }
 
         createButton.isEnabled = false
-        Db.auth.createUserWithEmailAndPassword(mail, pass)
-            .addOnSuccessListener { result -> saveUser(result.user!!.uid, first, last, mail) }
-            .addOnFailureListener {
-                createButton.isEnabled = true
-                toast(it.localizedMessage ?: "Sign up failed")
-            }
-    }
-
-    private fun saveUser(uid: String, first: String, last: String, mail: String) {
-        val fullName = "$first $last"
-        val user = User(
-            uid = uid,
-            firstName = first,
-            lastName = last,
-            fullName = fullName,
-            nameLower = fullName.lowercase(),
-            email = mail,
-            gender = selectedGender(),
-            birthday = "%04d-%02d-%02d".format(
+        // The server hashes the password (password_hash) and returns a session token
+        val fields = mapOf(
+            "email" to mail,
+            "password" to pass,
+            "firstName" to first,
+            "lastName" to last,
+            "gender" to selectedGender(),
+            "birthday" to "%04d-%02d-%02d".format(
                 birthday.get(Calendar.YEAR), birthday.get(Calendar.MONTH) + 1, birthday.get(Calendar.DAY_OF_MONTH)
             ),
         )
-        Db.user(uid).setValue(user)
-            .addOnSuccessListener {
-                Db.user(uid).child("createdAt").setValue(ServerValue.TIMESTAMP)
-                RecentLogin(this).save(user)
-                Presence.goOnline()
-                enterProfileSetup()
-            }
-            .addOnFailureListener {
+        Api.post("auth/signup.php", fields) { result ->
+            val json = result.json
+            if (!result.ok || json == null) {
                 createButton.isEnabled = true
-                toast(it.localizedMessage ?: "Could not save your profile")
+                toast(if (result.offline) "You're offline. Connect to create an account." else result.message)
+                return@post
             }
+            val user = json.getJSONObject("user").toUser()
+            Session.save(json.getString("token"), user)
+            RecentLogin(this).save(user)
+            (application as KinnectApp).onSignedIn()
+            Push.saveToken()
+            enterProfileSetup()
+        }
     }
 }
 

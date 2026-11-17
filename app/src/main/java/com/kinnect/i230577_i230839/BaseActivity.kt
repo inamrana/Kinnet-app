@@ -40,6 +40,15 @@ open class BaseActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
     }
 
+    /** Opens the gallery and hands back the chosen photo as a compressed JPEG file, ready to upload. */
+    protected fun pickImageFile(maxSide: Int = 1280, onPicked: (java.io.File) -> Unit) {
+        onImagePicked = { uri ->
+            val file = Images.compressToFile(this, uri, maxSide)
+            if (file != null) onPicked(file) else toast("Could not read that photo")
+        }
+        imagePicker.launch("image/*")
+    }
+
     /** Opens the gallery and hands back the chosen photo as Base64 JPEG text (see [Images.encode]). */
     protected fun pickImage(maxSide: Int = 900, onPicked: (String) -> Unit) {
         onImagePicked = { uri ->
@@ -156,11 +165,18 @@ open class BaseActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.fade_in_fast, R.anim.none)
     }
 
-    /** Log out: mark offline, sign out of Firebase, back to Log in with an empty back stack. */
+    /**
+     * Log out: the server invalidates the token and marks the account offline (retried
+     * automatically if the phone is offline right now), the local SQLite cache is wiped, and
+     * Log in opens with an empty back stack.
+     */
     protected fun logOut() {
+        val token = Session.token
         Presence.goOffline()
-        Db.uid?.let(Push::clearToken)
-        Db.auth.signOut()
+        Session.clear()
+        LocalDb.clearAll()
+        token?.let(Sync::logOutOnServer)
+        (application as KinnectApp).onSignedIn()
         val intent = Intent(this, LoginActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
