@@ -1,0 +1,8 @@
+# Pass the "Authorization: Bearer <token>" header through to PHP
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Never serve secrets, the schema or helper files directly
+<FilesMatch "^(config\.php|config\.local\.php|lib\.php|schema\.sql|fcm-service-account\.json|.*\.md)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes

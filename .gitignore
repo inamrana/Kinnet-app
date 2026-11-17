@@ -13,3 +13,9 @@ app/build
 # Firebase / Agora secrets: never commit
 google-services.json
 agora.properties
+
+# Backend secrets and uploaded media
+backend/config.local.php
+backend/fcm-service-account.json
+backend/uploads/*
+!backend/uploads/.htaccess
