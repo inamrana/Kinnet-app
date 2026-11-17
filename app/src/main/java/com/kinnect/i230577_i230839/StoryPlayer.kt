@@ -151,7 +151,7 @@ class StoryPlayer(
                 private var cancelled = false
                 override fun onAnimationCancel(animation: android.animation.Animator) { cancelled = true }
                 override fun onAnimationEnd(animation: android.animation.Animator) {
-                    if (!cancelled && !current!!.isVideo) next()
+                    if (!cancelled && current?.isVideo == false) next()
                 }
             })
             start()

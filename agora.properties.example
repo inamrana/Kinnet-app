@@ -1,3 +1,7 @@
 # Copy this file to agora.properties (which is git-ignored) and paste your Agora App ID.
 # Create a project at https://console.agora.io in "Testing mode" (App ID only, no certificate).
 agora.appId=
+# Only if the project has an App Certificate: a temporary token from the Agora console
+# and the channel name it was generated for (every call then uses that channel).
+agora.token=
+agora.channel=

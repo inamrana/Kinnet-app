@@ -46,7 +46,8 @@ class ChatsActivity : BaseActivity() {
         watch.on(Db.userChats.child(me)) { snapshot ->
             summaries = snapshot.children.mapNotNull { child ->
                 child.getValue(ChatSummary::class.java)?.copy(otherUid = child.key.orEmpty())
-            }.sortedByDescending { it.lastTime }
+            }.filter { it.lastTime > 0 } // a chat opened but never used has no messages yet
+                .sortedByDescending { it.lastTime }
             summaries.forEach { watchUser(it.otherUid) }
             showChats()
         }

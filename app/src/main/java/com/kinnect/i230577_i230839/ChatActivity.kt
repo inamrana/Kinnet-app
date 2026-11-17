@@ -374,7 +374,8 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun markRead() {
-        if (me.isEmpty() || otherUid.isEmpty()) return
+        // Only once there is a conversation, so opening an empty chat leaves no row behind in Chats
+        if (me.isEmpty() || otherUid.isEmpty() || messages.isEmpty()) return
         Db.userChats.child(me).child(otherUid).child("unread").setValue(0)
     }
 

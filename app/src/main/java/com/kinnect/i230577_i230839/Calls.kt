@@ -102,7 +102,9 @@ object Calls {
      */
     fun end(session: CallSession, durationSec: Long) {
         val me = Db.uid ?: return
-        val answered = session.status == CallSession.STATUS_ACCEPTED
+        // Ended by the other side counts as answered too, as long as it was picked up
+        val answered = session.status == CallSession.STATUS_ACCEPTED ||
+            (session.status == CallSession.STATUS_ENDED && session.acceptedAt > 0)
         val finalStatus = when {
             session.status == CallSession.STATUS_DECLINED -> CallSession.STATUS_DECLINED
             answered -> CallSession.STATUS_ENDED

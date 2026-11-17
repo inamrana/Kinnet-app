@@ -142,8 +142,11 @@ abstract class CallScreenActivity : BaseActivity() {
             autoSubscribeAudio = true
             autoSubscribeVideo = isVideo
         }
-        // Testing-mode Agora projects need no token; the call id is the channel name
-        created.joinChannel(null, callId, 0, options)
+        // Testing-mode projects need no token and use the call id as the channel. A project with an
+        // App Certificate uses the token from agora.properties, which is made for one fixed channel.
+        val token = BuildConfig.AGORA_TOKEN.ifEmpty { null }
+        val channel = if (token != null && BuildConfig.AGORA_CHANNEL.isNotEmpty()) BuildConfig.AGORA_CHANNEL else callId
+        created.joinChannel(token, channel, 0, options)
     }
 
     protected open fun setupLocalVideo(engine: RtcEngine) = Unit

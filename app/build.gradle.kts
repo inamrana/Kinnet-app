@@ -26,6 +26,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "AGORA_APP_ID", "\"${agoraProperties.getProperty("agora.appId", "")}\"")
+        // Optional: projects with an App Certificate use a token made for one fixed channel
+        buildConfigField("String", "AGORA_TOKEN", "\"${agoraProperties.getProperty("agora.token", "")}\"")
+        buildConfigField("String", "AGORA_CHANNEL", "\"${agoraProperties.getProperty("agora.channel", "")}\"")
     }
 
     buildFeatures {

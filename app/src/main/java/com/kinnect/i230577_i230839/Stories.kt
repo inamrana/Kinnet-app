@@ -47,7 +47,8 @@ data class Story(
 object Stories {
 
     const val LIFETIME_MS = 24 * 60 * 60 * 1000L
-    private const val MAX_VIDEO_BYTES = 8 * 1024 * 1024
+    // Base64 adds a third, so 7 MB stays under the database's 10 MB limit for one value
+    private const val MAX_VIDEO_BYTES = 7 * 1024 * 1024
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -68,6 +69,11 @@ object Stories {
             val encoded: String?
             val thumb: String?
             if (isVideo) {
+                val size = runCatching { context.contentResolver.openAssetFileDescriptor(media, "r")?.use { it.length } }.getOrNull() ?: -1L
+                if (size > MAX_VIDEO_BYTES) {
+                    main.post { done("That video is too long. Try a clip under 15 seconds.") }
+                    return@execute
+                }
                 val bytes = runCatching { context.contentResolver.openInputStream(media)?.use { it.readBytes() } }.getOrNull()
                 if (bytes == null || bytes.size > MAX_VIDEO_BYTES) {
                     main.post { done(if (bytes == null) "Could not read that video" else "That video is too long. Try a shorter clip.") }

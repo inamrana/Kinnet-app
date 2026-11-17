@@ -31,26 +31,28 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
-/**
- * Espresso tests for two backend-connected workflows. They talk to the real Firebase project,
- * so they need a test account passed as instrumentation arguments:
- *
- *   testEmail, testPassword  – an existing Kinnect account with a finished profile
- *   testFriendUid            – the uid of one of that account's friends (for the chat test)
- *
- * Android Studio: Run > Edit Configurations > Instrumentation arguments, or
- *   gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.testEmail=...
- */
+
 @RunWith(AndroidJUnit4::class)
 class BackendFlowTest {
 
     private val args = InstrumentationRegistry.getArguments()
-    private val email = args.getString("testEmail").orEmpty()
-    private val password = args.getString("testPassword").orEmpty()
-    private val friendUid = args.getString("testFriendUid").orEmpty()
+    private val email = args.getString("testEmail") ?: "kinnect.tester.a@example.com"
+    private val password = args.getString("testPassword") ?: "Kinnect#2026"
+    private val friendUid = args.getString("testFriendUid") ?: "TOL2t8fwkwX1b0LSu3nv3fW20Rx2"
 
     @Before
     fun signedOut() {
+        // Grant runtime permissions up front so no system dialog pauses the app mid-test
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val pkg = instrumentation.targetContext.packageName
+        listOf(
+            "android.permission.POST_NOTIFICATIONS",
+            "android.permission.READ_MEDIA_IMAGES",
+            "android.permission.READ_MEDIA_VIDEO",
+            "android.permission.READ_EXTERNAL_STORAGE",
+        ).forEach { permission ->
+            runCatching { instrumentation.uiAutomation.grantRuntimePermission(pkg, permission) }
+        }
         FirebaseAuth.getInstance().signOut()
     }
 

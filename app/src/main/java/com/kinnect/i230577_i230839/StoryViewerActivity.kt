@@ -18,6 +18,7 @@ class StoryViewerActivity : BaseActivity() {
     private var all = listOf<Story>()
     private var isCloseFriend = false
     private var started = false
+    private var storiesLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,12 +57,15 @@ class StoryViewerActivity : BaseActivity() {
         }
         watch.on(Db.stories.child(ownerUid)) { snapshot ->
             all = snapshot.children.mapNotNull { it.getValue(Story::class.java)?.copy(id = it.key.orEmpty(), ownerId = ownerUid) }
+            storiesLoaded = true
             refresh()
         }
     }
 
     private fun refresh() {
         val me = Db.uid ?: return
+        // The close-friends answer can arrive before the stories; wait for the stories themselves
+        if (!storiesLoaded) return
         val visible = Stories.visible(all, me, isCloseFriend)
         if (!started) {
             // Start at the first story you have not seen yet
