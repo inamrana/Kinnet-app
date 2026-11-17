@@ -1,0 +1,2 @@
+# Copy to server.properties and set your laptop's Wi-Fi IP (ipconfig) where XAMPP runs.
+api.base=http://192.168.18.82/kinnect/

@@ -19,3 +19,6 @@ backend/config.local.php
 backend/fcm-service-account.json
 backend/uploads/*
 !backend/uploads/.htaccess
+
+# Address of your own backend (each laptop differs)
+server.properties

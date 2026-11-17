@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Kinnect PHP backend runs on a laptop on the local Wi-Fi over plain HTTP (XAMPP).
+     Production would use HTTPS; this keeps the demo setup simple. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

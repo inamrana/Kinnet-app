@@ -11,6 +11,12 @@ val agoraProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+// Address of the Kinnect PHP backend (git-ignored server.properties, e.g. api.base=http://192.168.18.82/kinnect/)
+val serverProperties = Properties().apply {
+    val file = rootProject.file("server.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
 android {
     namespace = "com.kinnect.i230577_i230839"
     compileSdk {
@@ -28,6 +34,7 @@ android {
         buildConfigField("String", "AGORA_APP_ID", "\"${agoraProperties.getProperty("agora.appId", "")}\"")
         // Optional: projects with an App Certificate use a token made for one fixed channel
         buildConfigField("String", "AGORA_TOKEN", "\"${agoraProperties.getProperty("agora.token", "")}\"")
+        buildConfigField("String", "API_BASE", "\"${serverProperties.getProperty("api.base", "http://192.168.18.82/kinnect/")}\"")
         buildConfigField("String", "AGORA_CHANNEL", "\"${agoraProperties.getProperty("agora.channel", "")}\"")
     }
 

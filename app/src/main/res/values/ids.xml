@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tag holding the photo URL a view is waiting for (guards recycled rows) -->
+    <item name="image_source" type="id" />
+</resources>
