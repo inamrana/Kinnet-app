@@ -8,7 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 
-/** Users read once and kept in memory, for names and avatars in feeds and comments. */
+/** Users read once (SQLite, then the server) and kept in memory, for names and avatars in feeds and comments. */
 object UserCache {
     private val users = hashMapOf<String, User>()
     private val waiting = hashMapOf<String, MutableList<(User) -> Unit>>()
@@ -20,11 +20,19 @@ object UserCache {
         val queue = waiting.getOrPut(uid) { mutableListOf() }
         queue += done
         if (queue.size > 1) return
-        Db.user(uid).get().addOnSuccessListener { snapshot ->
-            val user = snapshot.getValue(User::class.java) ?: User(uid = uid, fullName = "Kinnect user")
+        // SQLite first (instant, offline), then the web service
+        LocalDb.user(uid)?.let { cached ->
+            put(cached)
+            waiting.remove(uid)?.forEach { it(cached) }
+            return
+        }
+        Api.get("users/get.php", mapOf("id" to uid)) { result ->
+            val user = result.json?.optJSONObject("user")?.takeIf { result.ok }?.toUser()
+                ?: User(uid = uid, fullName = "Kinnect user")
+            if (result.ok) LocalDb.putUser(user)
             put(user)
             waiting.remove(uid)?.forEach { it(user) }
-        }.addOnFailureListener { waiting.remove(uid) }
+        }
     }
 
     fun put(user: User) {

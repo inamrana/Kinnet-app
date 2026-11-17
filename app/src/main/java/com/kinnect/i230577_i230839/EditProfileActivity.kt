@@ -5,14 +5,11 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.MutableData
-import com.google.firebase.database.Transaction
 
 /**
- * 16 · Edit profile — loads users/{uid} and saves name, username, website and bio.
- * Usernames are kept unique through usernames/{username} -> uid.
+ * 16 · Edit profile — loads the profile (cached first) and saves name, username, website and bio
+ * through users/update.php. The server keeps usernames unique and stores the profile picture and
+ * cover photo as files in its uploads folder.
  *
  * Opened with [EXTRA_SETUP] right after sign up / first log in: the user must pick a
  * username and bio, and Save then enters Home instead of going back.
@@ -41,17 +38,19 @@ class EditProfileActivity : BaseActivity() {
         }
         tapCloses(R.id.btn_cancel)
         onTap(R.id.btn_save) { save() }
-        // Photos are saved straight away, like in most social apps
+        // Photos are uploaded straight away, like in most social apps
         listOf(R.id.btn_edit_picture, R.id.edit_avatar).forEach { id ->
-            onTap(id) { pickImage(maxSide = 400) { savePhoto("profileImage", it) } }
+            onTap(id) { pickImageFile(maxSide = 600) { uploadPhoto(avatar = it) } }
         }
-        onTap(R.id.btn_edit_cover) { pickImage { savePhoto("coverImage", it) } }
+        onTap(R.id.btn_edit_cover) { pickImageFile { uploadPhoto(cover = it) } }
         loadProfile()
     }
 
-    private fun savePhoto(field: String, base64: String) {
-        Db.me()?.child(field)?.setValue(base64)?.addOnSuccessListener {
-            current = if (field == "profileImage") current.copy(profileImage = base64) else current.copy(coverImage = base64)
+    private fun uploadPhoto(avatar: java.io.File? = null, cover: java.io.File? = null) {
+        toast("Uploading…")
+        Users.update(emptyMap(), avatar, cover) { user, error ->
+            if (user == null) return@update toast(error ?: "Could not upload the photo")
+            current = user
             showPhotos()
         }
     }
@@ -62,21 +61,26 @@ class EditProfileActivity : BaseActivity() {
     }
 
     private fun loadProfile() {
-        Db.me()?.get()?.addOnSuccessListener { snapshot ->
-            current = snapshot.getValue(User::class.java) ?: return@addOnSuccessListener
-            name.setText(current.fullName)
-            username.setText(current.username)
-            website.setText(current.website)
-            bio.setText(current.bio)
+        val me = Session.uid ?: return
+        var filled = false
+        Users.load(me) { user ->
+            current = user
+            // Don't overwrite what the user is already typing when the fresh copy arrives
+            if (!filled) {
+                name.setText(user.fullName)
+                username.setText(user.username)
+                website.setText(user.website)
+                bio.setText(user.bio)
+                filled = true
+            }
             showPhotos()
-            findViewById<TextView>(R.id.value_email).text = current.email
-            findViewById<TextView>(R.id.value_phone).text = current.phone.ifEmpty { "Not added" }
-            findViewById<TextView>(R.id.value_gender).text = current.gender
+            findViewById<TextView>(R.id.value_email).text = user.email
+            findViewById<TextView>(R.id.value_phone).text = user.phone.ifEmpty { "Not added" }
+            findViewById<TextView>(R.id.value_gender).text = user.gender
         }
     }
 
     private fun save() {
-        val uid = Db.uid ?: return
         val newName = name.text.toString().trim()
         val newUsername = username.text.toString().trim().lowercase()
         when {
@@ -88,59 +92,25 @@ class EditProfileActivity : BaseActivity() {
             setup && bio.text.isBlank() -> { bio.error = "Add a short bio"; return }
         }
 
-        findViewById<View>(R.id.btn_save).isEnabled = false
-        if (newUsername == current.username) {
-            saveFields(uid, newName, newUsername)
-        } else {
-            claimUsername(uid, newUsername) { claimed ->
-                if (claimed) {
-                    if (current.username.isNotEmpty()) Db.usernames.child(Db.usernameKey(current.username)).removeValue()
-                    saveFields(uid, newName, newUsername)
-                } else {
-                    findViewById<View>(R.id.btn_save).isEnabled = true
-                    username.error = "That username is taken"
-                }
-            }
-        }
-    }
-
-    /** Atomically reserves usernames/{name} for [uid]; fails if someone else already owns it. */
-    private fun claimUsername(uid: String, name: String, done: (Boolean) -> Unit) {
-        Db.usernames.child(Db.usernameKey(name)).runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val owner = data.getValue(String::class.java)
-                if (owner != null && owner != uid) return Transaction.abort()
-                data.value = uid
-                return Transaction.success(data)
-            }
-
-            override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
-                runOnUiThread { done(error == null && committed) }
-            }
-        })
-    }
-
-    private fun saveFields(uid: String, newName: String, newUsername: String) {
-        val parts = newName.split(" ", limit = 2)
-        val updates = mapOf(
-            "fullName" to newName,
-            "nameLower" to newName.lowercase(),
-            "firstName" to parts[0],
-            "lastName" to parts.getOrElse(1) { "" },
+        val saveButton = findViewById<View>(R.id.btn_save)
+        saveButton.isEnabled = false
+        val fields = mapOf(
+            "name" to newName,
             "username" to newUsername,
             "website" to website.text.toString().trim(),
             "bio" to bio.text.toString().trim(),
-            "profileComplete" to true,
+            "setup" to if (setup) "1" else "0",
         )
-        Db.user(uid).updateChildren(updates)
-            .addOnSuccessListener {
-                RecentLogin(this).save(current.copy(fullName = newName))
-                if (setup) enterHome() else finish()
+        Users.update(fields) { user, error ->
+            saveButton.isEnabled = true
+            if (user == null) {
+                // The server is the judge of unique usernames
+                if (error == "That username is taken") username.error = error else toast(error ?: "Could not save")
+                return@update
             }
-            .addOnFailureListener {
-                findViewById<View>(R.id.btn_save).isEnabled = true
-                toast(it.localizedMessage ?: "Could not save")
-            }
+            RecentLogin(this).save(user)
+            if (setup) enterHome() else finish()
+        }
     }
 
     companion object {

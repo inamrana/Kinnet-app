@@ -11,12 +11,13 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * 15 · Your profile — live name, bio, photos and friend count from users/{uid} and friends/{uid}.
- * The camera buttons change the cover photo and profile picture; "Edit profile" opens Edit profile.
+ * 15 · Your profile — name, bio, photos and friend count from the web service (users/get.php),
+ * shown from the SQLite cache first so it opens instantly and offline. The camera buttons upload a
+ * new cover photo or profile picture; "Edit profile" opens Edit profile.
  */
 class ProfileActivity : BaseActivity() {
 
-    private val watch = Watch()
+    private var friendsWatch: Watch? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,16 +27,29 @@ class ProfileActivity : BaseActivity() {
         tapOpens(EditProfileActivity::class.java, R.id.btn_edit_profile)
         tapOpens(CameraActivity::class.java, R.id.btn_add_story)
         tapOpens(SearchActivity::class.java, R.id.btn_find_friends)
-        onTap(R.id.btn_edit_avatar) { pickImage(maxSide = 400) { Db.me()?.child("profileImage")?.setValue(it) } }
-        onTap(R.id.btn_edit_cover) { pickImage { Db.me()?.child("coverImage")?.setValue(it) } }
+        onTap(R.id.btn_edit_avatar) { pickImageFile(maxSide = 600) { upload(avatar = it) } }
+        onTap(R.id.btn_edit_cover) { pickImageFile { upload(cover = it) } }
         // Placeholder detail rows from the design that Kinnect does not store yet
         listOf(R.id.profile_work, R.id.profile_school, R.id.profile_lives).forEach {
             (findViewById<View>(it).parent as View).visibility = View.GONE
         }
 
-        val me = Db.me() ?: return
-        watch.on(me) { snapshot -> snapshot.getValue(User::class.java)?.let(::showUser) }
-        watch.on(Db.friends.child(me.key!!)) { snapshot -> showFriends(snapshot.children.mapNotNull { it.key }) }
+        friendsWatch = Friends.watchAll { showFriends() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val me = Session.uid ?: return
+        Users.profile(me) { profile -> showUser(profile.user) }
+        showFriends()
+        Friends.refresh { showFriends() }
+    }
+
+    private fun upload(avatar: java.io.File? = null, cover: java.io.File? = null) {
+        toast("Uploading…")
+        Users.update(emptyMap(), avatar, cover) { user, error ->
+            if (user != null) showUser(user) else toast(error ?: "Could not upload the photo")
+        }
     }
 
     private fun showUser(user: User) {
@@ -50,7 +64,8 @@ class ProfileActivity : BaseActivity() {
         findViewById<TextView>(R.id.profile_joined).text = joinedText(user.createdAt)
     }
 
-    private fun showFriends(uids: List<String>) {
+    private fun showFriends() {
+        val uids = LocalDb.links("friends").map { it.userId }
         findViewById<TextView>(R.id.profile_friends_count).text =
             HtmlCompat.fromHtml("<b>${uids.size}</b> friends", HtmlCompat.FROM_HTML_MODE_LEGACY)
         findViewById<TextView>(R.id.profile_friends_label).text = "${uids.size} friends"
@@ -58,7 +73,7 @@ class ProfileActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        watch.stop()
+        friendsWatch?.stop()
         super.onDestroy()
     }
 
@@ -75,11 +90,9 @@ class ProfileActivity : BaseActivity() {
                 tile.visibility = if (uid == null) View.INVISIBLE else View.VISIBLE
                 if (uid == null) return@forEachIndexed
                 tile.setOnClickListener { PersonRow.openProfile(tile, uid) }
-                Db.user(uid).get().addOnSuccessListener { snap ->
-                    val user = snap.getValue(User::class.java) ?: return@addOnSuccessListener
-                    tile.text = user.initials
-                    tile.backgroundTintList = ColorStateList.valueOf(Avatars.colorFor(activity, user.uid))
-                }
+                val user = LocalDb.user(uid) ?: return@forEachIndexed
+                tile.text = user.initials
+                tile.backgroundTintList = ColorStateList.valueOf(Avatars.colorFor(activity, user.uid))
             }
         }
     }
