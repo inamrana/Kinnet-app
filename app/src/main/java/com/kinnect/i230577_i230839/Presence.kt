@@ -1,56 +1,56 @@
 package com.kinnect.i230577_i230839
 
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ServerValue
-import com.google.firebase.database.ValueEventListener
+import android.os.Handler
+import android.os.Looper
 
 /**
- * Online / offline status for the signed-in user (users/{uid}/online and lastSeen).
- *
- * - Online while any Kinnect screen is visible ([KinnectApp] calls [goOnline] / [goAway]).
- * - Listens to Firebase's ".info/connected" flag and uses onDisconnect(), so the user is
- *   marked offline even if the app is killed or loses network.
+ * Online / offline status through the web service. While any Kinnect screen is visible the app
+ * sends a heartbeat ("online") every 30 seconds; going to the background sends "away".
+ * The server treats anyone without a heartbeat for 70 seconds as offline, so a killed app or a
+ * lost connection also shows as offline. Other people's status is read with users/statuses.php.
  */
 object Presence {
 
-    private val connectedRef get() = FirebaseDatabase.getInstance().getReference(".info/connected")
-    private var listener: ValueEventListener? = null
+    private const val HEARTBEAT_MS = 30_000L
+    private val handler = Handler(Looper.getMainLooper())
     private var visible = false
+
+    private val heartbeat = object : Runnable {
+        override fun run() {
+            if (!visible || !Session.isLoggedIn) return
+            Api.post("users/presence.php", mapOf("state" to "online")) {}
+            handler.postDelayed(this, HEARTBEAT_MS)
+        }
+    }
 
     fun goOnline() {
         visible = true
-        if (listener == null) {
-            listener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.getValue(Boolean::class.java) == true && visible) markOnline()
-                }
-
-                override fun onCancelled(error: DatabaseError) = Unit
-            }.also { connectedRef.addValueEventListener(it) }
-        } else {
-            markOnline()
-        }
+        handler.removeCallbacks(heartbeat)
+        heartbeat.run()
     }
 
     /** App went to the background: show as offline with a fresh "last seen" time. */
     fun goAway() {
         visible = false
-        Db.me()?.updateChildren(mapOf("online" to false, "lastSeen" to ServerValue.TIMESTAMP))
+        handler.removeCallbacks(heartbeat)
+        if (Session.isLoggedIn) Api.post("users/presence.php", mapOf("state" to "away")) {}
     }
 
-    /** Called on log out, before signing out, while we still have write access. */
+    /** Log out: stop the heartbeat (the logout call itself marks the account offline). */
     fun goOffline() {
-        listener?.let { connectedRef.removeEventListener(it) }
-        listener = null
-        goAway()
+        visible = false
+        handler.removeCallbacks(heartbeat)
     }
 
-    private fun markOnline() {
-        val me = Db.me() ?: return
-        me.child("online").onDisconnect().setValue(false)
-        me.child("lastSeen").onDisconnect().setValue(ServerValue.TIMESTAMP)
-        me.child("online").setValue(true)
+    /** Fetches online / last-seen for [ids]: id → (online, lastSeen). */
+    fun statuses(ids: Collection<String>, done: (Map<String, Pair<Boolean, Long>>) -> Unit) {
+        if (ids.isEmpty()) return done(emptyMap())
+        Api.get("users/statuses.php", mapOf("ids" to ids.joinToString(","))) { result ->
+            val statuses = result.json?.optJSONObject("statuses") ?: return@get
+            done(statuses.keys().asSequence().associateWith { id ->
+                val s = statuses.getJSONObject(id)
+                s.optBoolean("online") to s.optLong("lastSeen")
+            })
+        }
     }
 }
