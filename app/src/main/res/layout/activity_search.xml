@@ -81,29 +81,21 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
+            <!-- Filters: who to search among (selected chip uses Chip.Selected's look, set in code) -->
             <TextView
+                android:id="@+id/filter_everyone"
                 style="@style/Chip.Selected"
-                android:text="All" />
+                android:text="Everyone" />
             <TextView
+                android:id="@+id/filter_friends"
                 style="@style/Chip"
                 android:layout_marginStart="8dp"
-                android:text="People" />
+                android:text="Friends" />
             <TextView
+                android:id="@+id/filter_requests"
                 style="@style/Chip"
                 android:layout_marginStart="8dp"
-                android:text="Posts" />
-            <TextView
-                style="@style/Chip"
-                android:layout_marginStart="8dp"
-                android:text="Groups" />
-            <TextView
-                style="@style/Chip"
-                android:layout_marginStart="8dp"
-                android:text="Marketplace" />
-            <TextView
-                style="@style/Chip"
-                android:layout_marginStart="8dp"
-                android:text="Events" />
+                android:text="Requests" />
         </LinearLayout>
     </HorizontalScrollView>
 

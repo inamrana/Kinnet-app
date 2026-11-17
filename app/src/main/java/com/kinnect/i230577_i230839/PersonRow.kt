@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat
 /**
  * Inflates one item_person row (avatar, name, subtitle, friend button) into [parent].
  * Tapping the row opens that user's profile; the round button follows
- * Add friend → Requested → Friends live. Returns the [Watch] so the screen can stop it.
+ * Add friend → Requested → Friends (works offline; synced later). Returns the [Watch] so the screen can stop it.
  */
 object PersonRow {
 
@@ -33,6 +33,8 @@ object PersonRow {
         return Friends.watchState(user.uid) {
             state = it
             styleAction(action, it)
+            // Changed offline and not synced yet: shown straight away, slightly faded
+            action.alpha = if (Friends.isPending(user.uid)) 0.5f else 1f
         }
     }
 

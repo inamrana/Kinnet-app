@@ -7,13 +7,16 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.text.HtmlCompat
+import org.json.JSONObject
 
 /**
- * 14 · Friends tab — live friend requests (Confirm / Delete), "Your friends" and People you may know.
+ * 14 · Friends tab — friend requests (Confirm / Delete), "Your friends" and People you may know.
+ * Everything is shown from SQLite first and refreshed from friends/list.php; Confirm / Delete
+ * work offline too (queued and synced, marked "Pending" until the server has them).
  */
 class FriendsActivity : BaseActivity() {
 
-    private val watch = Watch()
+    private var friendsWatch: Watch? = null
     private val rowWatches = mutableListOf<Watch>()
     private lateinit var requestsList: LinearLayout
     private lateinit var friendsList: LinearLayout
@@ -29,70 +32,68 @@ class FriendsActivity : BaseActivity() {
         suggestionsList = findViewById(R.id.suggestions_list)
         onTap(R.id.chip_suggestions) { scrollTo(R.id.suggestions_title) }
         onTap(R.id.chip_your_friends) { scrollTo(R.id.friends_title) }
+        friendsWatch = Friends.watchAll { showLocal() }
+    }
 
-        val me = Db.uid ?: return
-        watch.on(Db.friendRequests.child(me)) { snapshot ->
-            val requests = snapshot.children.mapNotNull { child ->
-                child.key?.let { it to (child.getValue(Long::class.java) ?: 0L) }
-            }.sortedByDescending { it.second }
-            showRequests(requests)
-        }
-        watch.on(Db.friends.child(me)) { snapshot ->
-            showFriends(snapshot.children.mapNotNull { it.key })
-            loadSuggestions(me, snapshot.children.mapNotNull { it.key }.toSet())
+    override fun onResume() {
+        super.onResume()
+        showLocal()
+        LocalDb.cache("suggestions")?.let { showSuggestions(JSONObject(it)) }
+        Friends.refresh { showLocal() }
+        Api.get("users/suggestions.php") { result ->
+            val json = result.json?.takeIf { result.ok } ?: return@get
+            LocalDb.putCache("suggestions", json.toString())
+            showSuggestions(json)
         }
     }
 
-    private fun showRequests(requests: List<Pair<String, Long>>) {
+    private fun showLocal() {
+        showRequests(LocalDb.links("incoming"))
+        showFriends(LocalDb.links("friends").mapNotNull { LocalDb.user(it.userId) })
+    }
+
+    private fun showRequests(requests: List<LocalDb.Link>) {
         findViewById<TextView>(R.id.requests_title).text = HtmlCompat.fromHtml(
             "Friend requests <font color=\"#C0492C\">${requests.size}</font>", HtmlCompat.FROM_HTML_MODE_LEGACY
         )
         findViewById<View>(R.id.requests_empty).visibility = if (requests.isEmpty()) View.VISIBLE else View.GONE
         requestsList.removeAllViews()
-        val me = Db.uid ?: return
-        requests.forEach { (fromUid, time) ->
+        requests.forEach { link ->
+            val user = LocalDb.user(link.userId) ?: return@forEach
             val row = LayoutInflater.from(this).inflate(R.layout.item_friend_request, requestsList, false)
             requestsList.addView(row)
-            row.findViewById<TextView>(R.id.request_time).text = TimeAgo.short(time)
-            row.setOnClickListener { PersonRow.openProfile(row, fromUid) }
-            row.findViewById<View>(R.id.request_confirm).setOnClickListener { Friends.confirm(fromUid) }
-            row.findViewById<View>(R.id.request_delete).setOnClickListener { Friends.delete(fromUid) }
-            Db.user(fromUid).get().addOnSuccessListener { snap ->
-                val user = snap.getValue(User::class.java) ?: return@addOnSuccessListener
-                Avatars.show(row.findViewById(R.id.request_avatar), user)
-                row.findViewById<TextView>(R.id.request_name).text = user.fullName
-            }
-            Friends.mutualCount(me, fromUid) { count ->
-                row.findViewById<TextView>(R.id.request_mutual).text = mutualText(count)
-            }
+            Avatars.show(row.findViewById(R.id.request_avatar), user)
+            row.findViewById<TextView>(R.id.request_name).text = user.fullName
+            row.findViewById<TextView>(R.id.request_time).text = TimeAgo.short(link.time)
+            row.findViewById<TextView>(R.id.request_mutual).text = mutualText(link.mutual)
+            row.setOnClickListener { PersonRow.openProfile(row, user.uid) }
+            row.findViewById<View>(R.id.request_confirm).setOnClickListener { Friends.confirm(user.uid) }
+            row.findViewById<View>(R.id.request_delete).setOnClickListener { Friends.delete(user.uid) }
         }
     }
 
-    private fun showFriends(uids: List<String>) {
-        findViewById<View>(R.id.friends_empty).visibility = if (uids.isEmpty()) View.VISIBLE else View.GONE
-        findViewById<TextView>(R.id.friends_title).text = "Your friends · ${uids.size}"
+    private fun showFriends(friends: List<User>) {
+        findViewById<View>(R.id.friends_empty).visibility = if (friends.isEmpty()) View.VISIBLE else View.GONE
+        findViewById<TextView>(R.id.friends_title).text = "Your friends · ${friends.size}"
         friendsList.removeAllViews()
-        uids.forEach { uid ->
-            Db.user(uid).get().addOnSuccessListener { snap ->
-                val user = snap.getValue(User::class.java) ?: return@addOnSuccessListener
-                PersonRow.add(friendsList, user, "@${user.username}", showAction = false)
-            }
+        friends.sortedBy { it.fullName }.forEach { user ->
+            val pending = if (Friends.isPending(user.uid)) " · Pending" else ""
+            PersonRow.add(friendsList, user, "@${user.username}$pending", showAction = false)
         }
     }
 
-    /** A few people who are not friends yet (newest accounts first). */
-    private fun loadSuggestions(me: String, friendIds: Set<String>) {
-        Db.users.orderByChild("createdAt").limitToLast(30).get().addOnSuccessListener { snapshot ->
-            rowWatches.forEach(Watch::stop)
-            rowWatches.clear()
-            suggestionsList.removeAllViews()
-            val people = snapshot.children.mapNotNull { it.getValue(User::class.java) }
-                .filter { it.uid != me && it.uid !in friendIds && it.profileComplete }
-                .reversed().take(MAX_SUGGESTIONS)
-            findViewById<View>(R.id.suggestions_title).visibility = if (people.isEmpty()) View.GONE else View.VISIBLE
-            people.forEach { user ->
-                PersonRow.add(suggestionsList, user, "@${user.username}")?.let(rowWatches::add)
-            }
+    /** People you may know: newest accounts that aren't friends yet. */
+    private fun showSuggestions(json: JSONObject) {
+        rowWatches.forEach(Watch::stop)
+        rowWatches.clear()
+        suggestionsList.removeAllViews()
+        val people = json.optJSONArray("people").mapObjects { item ->
+            item.getJSONObject("user").toUser().also { Friends.remember(it.uid, item.optString("state")) }
+        }.filter { Friends.state(it.uid) != FriendState.FRIENDS }.take(MAX_SUGGESTIONS)
+        LocalDb.putUsers(people)
+        findViewById<View>(R.id.suggestions_title).visibility = if (people.isEmpty()) View.GONE else View.VISIBLE
+        people.forEach { user ->
+            PersonRow.add(suggestionsList, user, "@${user.username}")?.let(rowWatches::add)
         }
     }
 
@@ -102,7 +103,7 @@ class FriendsActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        watch.stop()
+        friendsWatch?.stop()
         rowWatches.forEach(Watch::stop)
         super.onDestroy()
     }

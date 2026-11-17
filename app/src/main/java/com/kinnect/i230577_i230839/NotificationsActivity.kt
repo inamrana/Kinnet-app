@@ -14,10 +14,11 @@ import androidx.core.text.HtmlCompat
  * 18 · Notifications tab — pending friend requests (Confirm / Delete) and activity on your posts
  * (reactions, comments, replies, accepted requests). "New" holds requests and the last day;
  * everything older is under "Earlier". Opening the tab marks notifications as read.
+ * Data comes from friends/list.php and notifications/list.php, cached in SQLite for offline use.
  */
 class NotificationsActivity : BaseActivity() {
 
-    private val watch = Watch()
+    private var friendsWatch: Watch? = null
     private var requests = listOf<Pair<String, Long>>()
     private var notices = listOf<Notice>()
     private lateinit var newList: LinearLayout
@@ -31,24 +32,34 @@ class NotificationsActivity : BaseActivity() {
         earlierList = findViewById(R.id.notif_earlier_list)
         findViewById<View>(R.id.notif_see_previous).visibility = View.GONE
 
-        val me = Db.uid ?: return
-        watch.on(Db.friendRequests.child(me)) { snapshot ->
-            requests = snapshot.children.mapNotNull { child ->
-                child.key?.let { it to (child.getValue(Long::class.java) ?: 0L) }
-            }.sortedByDescending { it.second }
-            show()
-        }
-        watch.on(Db.notifications.child(me).orderByChild("timestamp").limitToLast(MAX_NOTICES)) { snapshot ->
-            notices = snapshot.children.mapNotNull { child ->
-                child.getValue(Notice::class.java)?.copy(id = child.key.orEmpty())
-            }.sortedByDescending { it.timestamp }
-            show()
-        }
+        friendsWatch = Friends.watchAll { loadRequests(); show() }
     }
 
     override fun onResume() {
         super.onResume()
+        loadRequests()
+        LocalDb.cache("notifications")?.let { notices = parse(org.json.JSONObject(it)) }
+        show()
+        Friends.refresh { loadRequests(); show() }
+        Api.get("notifications/list.php") { result ->
+            val json = result.json?.takeIf { result.ok } ?: return@get
+            LocalDb.putCache("notifications", json.toString())
+            notices = parse(json)
+            show()
+        }
         markAllRead()
+    }
+
+    private fun loadRequests() {
+        requests = LocalDb.links("incoming").map { it.userId to it.time }
+    }
+
+    private fun parse(json: org.json.JSONObject): List<Notice> = json.optJSONArray("notices").mapObjects {
+        Notice(
+            id = it.optString("id"), type = it.optString("type"), fromUid = it.optString("fromUid"),
+            postId = it.optString("postId"), text = it.optString("text"), read = it.optBoolean("read"),
+            timestamp = it.optLong("timestamp"),
+        )
     }
 
     private fun show() {
@@ -89,7 +100,9 @@ class NotificationsActivity : BaseActivity() {
             else PersonRow.openProfile(row, notice.fromUid)
         }
         row.findViewById<View>(R.id.notif_more).setOnClickListener {
-            Db.uid?.let { Db.notifications.child(it).child(notice.id).removeValue() }
+            notices = notices - notice
+            show()
+            Api.post("notifications/read.php", mapOf("id" to notice.id, "remove" to "1")) {}
         }
         return row
     }
@@ -132,20 +145,15 @@ class NotificationsActivity : BaseActivity() {
     }
 
     private fun markAllRead() {
-        val me = Db.uid ?: return
-        Db.notifications.child(me).orderByChild("read").equalTo(false).get().addOnSuccessListener { snapshot ->
-            val updates = snapshot.children.associate { "notifications/$me/${it.key}/read" to true as Any? }
-            if (updates.isNotEmpty()) Db.update(updates)
-        }
+        Api.post("notifications/read.php") {}
     }
 
     override fun onDestroy() {
-        watch.stop()
+        friendsWatch?.stop()
         super.onDestroy()
     }
 
     private companion object {
-        const val MAX_NOTICES = 60
         const val DAY_MS = 24 * 60 * 60 * 1000L
     }
 }
