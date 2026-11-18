@@ -2,11 +2,15 @@ package com.kinnect.i230577_i230839
 
 import android.content.Context
 import android.content.Intent
-import com.google.firebase.database.ServerValue
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
+import org.json.JSONObject
 
 /**
- * One call in callSessions/{callId}. The Agora channel name is the call id.
- * calls/{calleeUid} points at the call while it is ringing, so the callee's app can show it.
+ * One call from the calls web services (calls/start.php, calls/get.php …). The Agora channel name
+ * is the call id. The server keeps every call, so the same rows are the call history
+ * (calls/logs.php) with how each one ended and how long it lasted.
  */
 data class CallSession(
     val id: String = "",
@@ -17,6 +21,7 @@ data class CallSession(
     val createdAt: Long = 0L,
     val acceptedAt: Long = 0L,
     val endedAt: Long = 0L,
+    val durationSec: Long = 0L,
 ) {
     fun otherThan(uid: String) = if (callerId == uid) calleeId else callerId
 
@@ -27,11 +32,24 @@ data class CallSession(
         const val STATUS_ENDED = "ended"
         const val STATUS_MISSED = "missed"
         const val RING_TIMEOUT_MS = 40_000L
+
+        fun from(json: JSONObject) = CallSession(
+            id = json.optString("id"),
+            callerId = json.optString("callerId"),
+            calleeId = json.optString("calleeId"),
+            video = json.optBoolean("video"),
+            status = json.optString("status", STATUS_RINGING),
+            createdAt = json.optLong("createdAt"),
+            acceptedAt = json.optLong("acceptedAt"),
+            endedAt = json.optLong("endedAt"),
+            durationSec = json.optLong("durationSec"),
+        )
     }
 }
 
-/** A row of call history in callLogs/{uid}/{callId}. */
+/** A row of call history from calls/logs.php. */
 data class CallLog(
+    val callId: String = "",
     val otherUid: String = "",
     val video: Boolean = false,
     val outgoing: Boolean = false,
@@ -40,26 +58,24 @@ data class CallLog(
     val timestamp: Long = 0L,
 )
 
-/** Call signalling over the Realtime Database; the audio / video itself goes through Agora. */
+/** Call signalling over the PHP web services; the audio / video itself goes through Agora. */
 object Calls {
 
-    /** Starts ringing [otherUid] and opens the call screen. */
+    /** How often an open call screen asks the server for the call's status. */
+    private const val POLL_MS = 1_500L
+
+    /** Starts ringing [otherUid] and opens the call screen once the server has created the call. */
     fun start(context: Context, otherUid: String, video: Boolean) {
-        val me = Db.uid ?: return
-        val id = Db.callSessions.push().key ?: return
-        Db.update(
-            mapOf(
-                "callSessions/$id" to mapOf(
-                    "callerId" to me,
-                    "calleeId" to otherUid,
-                    "video" to video,
-                    "status" to CallSession.STATUS_RINGING,
-                    "createdAt" to ServerValue.TIMESTAMP,
-                ),
-                "calls/$otherUid" to id,
-            )
-        )
-        open(context, id, otherUid, video, outgoing = true)
+        if (Session.uid == null) return
+        Api.post("calls/start.php", mapOf("to" to otherUid, "video" to if (video) "1" else "0")) { result ->
+            val call = result.json?.optJSONObject("call")?.takeIf { result.ok }?.let(CallSession::from)
+            if (call == null) {
+                val message = if (result.offline) "You're offline, so the call can't start" else result.message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                return@post
+            }
+            open(context, call.id, otherUid, video, outgoing = true)
+        }
     }
 
     fun open(context: Context, callId: String, otherUid: String, video: Boolean, outgoing: Boolean) {
@@ -73,76 +89,89 @@ object Calls {
         )
     }
 
-    fun accept(session: CallSession) {
-        val me = Db.uid ?: return
-        Db.update(
-            mapOf(
-                "callSessions/${session.id}/status" to CallSession.STATUS_ACCEPTED,
-                "callSessions/${session.id}/acceptedAt" to ServerValue.TIMESTAMP,
-                "calls/$me" to null,
-            )
-        )
+    /**
+     * Follows call [callId] until the returned [Watch] is stopped: [onCall] runs with the call as
+     * the server sees it, straight away and then every [POLL_MS]. [onGone] runs if the call
+     * doesn't exist (or isn't ours).
+     */
+    fun watch(callId: String, onGone: () -> Unit = {}, onCall: (CallSession) -> Unit): Watch {
+        val handler = Handler(Looper.getMainLooper())
+        var stopped = false
+        val poll = object : Runnable {
+            override fun run() {
+                Api.get("calls/get.php", mapOf("id" to callId)) { result ->
+                    if (stopped) return@get
+                    val call = result.json?.optJSONObject("call")?.takeIf { result.ok }
+                    when {
+                        call != null -> onCall(CallSession.from(call))
+                        result.code == 404 -> { onGone(); return@get }
+                    }
+                    if (!stopped) handler.postDelayed(this, POLL_MS)
+                }
+            }
+        }
+        handler.post(poll)
+        return Watch().onStop { stopped = true; handler.removeCallbacksAndMessages(null) }
     }
 
-    fun decline(session: CallSession) {
-        val me = Db.uid ?: return
-        Db.update(
-            mapOf(
-                "callSessions/${session.id}/status" to CallSession.STATUS_DECLINED,
-                "callSessions/${session.id}/endedAt" to ServerValue.TIMESTAMP,
-                "calls/$me" to null,
-            )
-        )
-        log(session, CallSession.STATUS_DECLINED, 0)
+    /** The call ringing for the signed-in user right now, or null. */
+    fun incoming(done: (CallSession?) -> Unit) {
+        Api.get("calls/incoming.php") { result ->
+            if (result.ok) done(result.json?.optJSONObject("call")?.let(CallSession::from))
+        }
     }
+
+    fun accept(session: CallSession, done: (CallSession?) -> Unit) = update(session.id, "accept", done)
+
+    fun decline(session: CallSession) = update(session.id, "decline") {}
 
     /**
-     * Hangs up. A call that was never answered counts as missed. The caller also posts the
-     * call in the chat ("Voice call · 2:31" / "Missed video call").
+     * Hangs up. The server decides how the call ended (answered → "ended", still ringing →
+     * "missed") and how long it lasted, then the caller posts it in the chat
+     * ("Voice call · 2:31" / "Missed video call").
      */
-    fun end(session: CallSession, durationSec: Long) {
-        val me = Db.uid ?: return
-        // Ended by the other side counts as answered too, as long as it was picked up
-        val answered = session.status == CallSession.STATUS_ACCEPTED ||
-            (session.status == CallSession.STATUS_ENDED && session.acceptedAt > 0)
-        val finalStatus = when {
-            session.status == CallSession.STATUS_DECLINED -> CallSession.STATUS_DECLINED
-            answered -> CallSession.STATUS_ENDED
-            else -> CallSession.STATUS_MISSED
-        }
-        if (session.status == CallSession.STATUS_RINGING || answered) {
-            Db.update(
-                mapOf(
-                    "callSessions/${session.id}/status" to finalStatus,
-                    "callSessions/${session.id}/endedAt" to ServerValue.TIMESTAMP,
-                    "calls/${session.calleeId}" to null,
-                )
-            )
-        }
-        log(session, finalStatus, durationSec)
-        if (session.callerId == me) {
-            val kind = if (session.video) "video call" else "voice call"
-            val text = when (finalStatus) {
-                CallSession.STATUS_ENDED -> "📞 ${kind.replaceFirstChar { it.uppercase() }} · ${duration(durationSec)}"
+    fun end(session: CallSession) {
+        val me = Session.uid ?: return
+        update(session.id, "end") { final ->
+            val call = final ?: return@update
+            if (call.callerId != me) return@update
+            val kind = if (call.video) "video call" else "voice call"
+            val text = when (call.status) {
+                CallSession.STATUS_ENDED -> "📞 ${kind.replaceFirstChar { it.uppercase() }} · ${duration(call.durationSec)}"
                 CallSession.STATUS_DECLINED -> "📞 ${kind.replaceFirstChar { it.uppercase() }} declined"
-                else -> "📞 Missed $kind"
+                CallSession.STATUS_MISSED -> "📞 Missed $kind"
+                else -> return@update
             }
-            ChatSender.send(session.calleeId, Message.TYPE_SYSTEM, text = text, preview = text, bumpUnread = finalStatus == CallSession.STATUS_MISSED)
+            // Only post once per call, even if both screens hang up
+            if (LocalDb.cache("callnote:${call.id}") != null) return@update
+            LocalDb.putCache("callnote:${call.id}", "1")
+            ChatSender.send(call.calleeId, Message.TYPE_SYSTEM, text = text, preview = text, bumpUnread = call.status == CallSession.STATUS_MISSED)
         }
     }
 
-    private fun log(session: CallSession, status: String, durationSec: Long) {
-        val me = Db.uid ?: return
-        Db.callLogs.child(me).child(session.id).setValue(
-            mapOf(
-                "otherUid" to session.otherThan(me),
-                "video" to session.video,
-                "outgoing" to (session.callerId == me),
-                "status" to status,
-                "durationSec" to durationSec,
-                "timestamp" to ServerValue.TIMESTAMP,
-            )
-        )
+    private fun update(callId: String, action: String, done: (CallSession?) -> Unit) {
+        Api.post("calls/update.php", mapOf("id" to callId, "action" to action)) { result ->
+            done(result.json?.optJSONObject("call")?.takeIf { result.ok }?.let(CallSession::from))
+        }
+    }
+
+    /** My call history, newest first. */
+    fun logs(done: (List<CallLog>) -> Unit) {
+        Api.get("calls/logs.php") { result ->
+            val logs = result.json?.optJSONArray("logs")?.takeIf { result.ok } ?: return@get
+            done((0 until logs.length()).map { i ->
+                val log = logs.getJSONObject(i)
+                CallLog(
+                    callId = log.optString("id"),
+                    otherUid = log.optString("otherUid"),
+                    video = log.optBoolean("video"),
+                    outgoing = log.optBoolean("outgoing"),
+                    status = log.optString("status"),
+                    durationSec = log.optLong("durationSec"),
+                    timestamp = log.optLong("timestamp"),
+                )
+            })
+        }
     }
 
     /** 151 -> "2:31" */

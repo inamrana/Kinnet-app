@@ -20,7 +20,7 @@ object Push {
 }
 
 /**
- * Receives Kinnect's push messages (sent by functions/index.js) and turns them into notifications:
+ * Receives Kinnect's push messages (sent by the PHP backend, see push_to in backend/lib.php) and turns them into notifications:
  * "message" (new chat message or screenshot alert) and "call" (incoming call).
  * While the app is open, in-app notifications come from [KinnectApp] instead, so nothing shows twice.
  */

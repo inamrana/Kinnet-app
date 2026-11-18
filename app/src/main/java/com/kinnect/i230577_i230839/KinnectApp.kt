@@ -4,18 +4,17 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.os.Bundle
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import android.os.Handler
+import android.os.Looper
 
 /**
- * App entry point: enables offline caching, keeps the user's online status in step with
- * whether any Kinnect screen is on screen, and rings when someone calls the signed-in user.
+ * App entry point: keeps the user's online status in step with whether any Kinnect screen is on
+ * screen and, while one is, polls the web services so an incoming call rings and new messages
+ * show an in-app notification.
  */
 class KinnectApp : Application() {
 
     private var startedScreens = 0
-    private var callWatch: Watch? = null
-    private var messageWatch: Watch? = null
     private var watchedUid: String? = null
 
     /** True while any Kinnect screen is visible. */
@@ -23,7 +22,6 @@ class KinnectApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
         LocalDb.init(this)
         Session.init(this)
         Images.init(this)
@@ -41,11 +39,17 @@ class KinnectApp : Application() {
         }
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityStarted(activity: Activity) {
-                if (startedScreens++ == 0 && Db.uid != null) Presence.goOnline()
+                if (startedScreens++ == 0 && Session.isLoggedIn) {
+                    Presence.goOnline()
+                    startPolling()
+                }
             }
 
             override fun onActivityStopped(activity: Activity) {
-                if (--startedScreens == 0 && Db.uid != null) Presence.goAway()
+                if (--startedScreens == 0) {
+                    stopPolling()
+                    if (Session.isLoggedIn) Presence.goAway()
+                }
             }
 
             override fun onActivityCreated(activity: Activity, state: Bundle?) = Unit
@@ -58,71 +62,96 @@ class KinnectApp : Application() {
 
     /** Called at start-up and after logging in or signing up. */
     fun onSignedIn() {
-        watchIncomingCalls(Session.uid)
+        watchedUid = Session.uid
+        lastTimes.clear()
+        chatBaseline = true
+        shownCallId = null
         if (Session.isLoggedIn) {
+            Push.saveToken()
             Sync.flush()
-            if (inForeground) Presence.goOnline()
+            if (inForeground) {
+                Presence.goOnline()
+                startPolling()
+            }
+        } else {
+            stopPolling()
         }
     }
 
-    /** Listens to calls/{uid}; a fresh ringing call opens the Incoming call screen (or a notification). */
-    private fun watchIncomingCalls(uid: String?) {
-        if (uid == watchedUid) return
-        callWatch?.stop()
-        callWatch = null
-        messageWatch?.stop()
-        messageWatch = null
-        watchedUid = uid
-        uid ?: return
-        Push.saveToken()
-        watchNewMessages(uid)
-        val pointer: DatabaseReference = Db.calls.child(uid)
-        callWatch = Watch().on(pointer) { snapshot ->
-            val callId = snapshot.getValue(String::class.java) ?: return@on
-            Db.callSessions.child(callId).get().addOnSuccessListener { sessionSnap ->
-                val session = sessionSnap.getValue(CallSession::class.java)?.copy(id = callId) ?: return@addOnSuccessListener
-                val fresh = System.currentTimeMillis() - session.createdAt < CallSession.RING_TIMEOUT_MS
-                if (session.status != CallSession.STATUS_RINGING || session.calleeId != uid || !fresh) return@addOnSuccessListener
-                if (inForeground) {
-                    Notifier.cancelCall(this)
-                    startActivity(
-                        Intent(this, IncomingCallActivity::class.java)
-                            .putExtra(CallScreenActivity.EXTRA_CALL_ID, callId)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                } else {
-                    UserCache.get(session.callerId) { caller ->
-                        Notifier.incomingCall(this, callId, caller.fullName, session.video)
-                    }
-                }
-            }
+    // ---- while a Kinnect screen is open ------------------------------------------------------
+    // Closed or in the background, FCM pushes from the PHP backend do this job instead
+    // (see KinnectMessagingService).
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var polling = false
+    private var ticks = 0
+    private var shownCallId: String? = null
+    private val lastTimes = hashMapOf<String, Long>()
+    private var chatBaseline = true
+
+    private val poll = object : Runnable {
+        override fun run() {
+            if (!polling || !Session.isLoggedIn) return
+            checkIncomingCall()
+            // Chats change less urgently than a ringing phone: every 4th tick
+            if (ticks++ % 4 == 0) checkNewMessages()
+            handler.postDelayed(this, POLL_MS)
         }
     }
 
-    /**
-     * In-app notification for a new message while you are on another Kinnect screen.
-     * (When the app is in the background, FCM delivers it through [KinnectMessagingService].)
-     */
-    private fun watchNewMessages(uid: String) {
-        val lastTimes = hashMapOf<String, Long>()
-        var baseline = true
-        messageWatch = Watch().on(Db.userChats.child(uid)) { snapshot ->
-            snapshot.children.forEach { child ->
-                val other = child.key ?: return@forEach
-                val summary = child.getValue(ChatSummary::class.java) ?: return@forEach
-                val previous = lastTimes.put(other, summary.lastTime)
-                val isNew = !baseline && summary.lastTime > (previous ?: 0L) && summary.unread > 0
-                if (isNew && inForeground && Push.openChatUid != other) {
-                    UserCache.get(other) { user ->
-                        val alert = summary.lastMessage.contains("took a screenshot")
-                        Notifier.message(
-                            this, other, user.fullName, summary.lastMessage,
-                            if (alert) Notifier.CHANNEL_ALERTS else Notifier.CHANNEL_MESSAGES
-                        )
-                    }
-                }
-            }
-            baseline = false
+    private fun startPolling() {
+        if (polling || !Session.isLoggedIn) return
+        polling = true
+        ticks = 0
+        handler.post(poll)
+    }
+
+    private fun stopPolling() {
+        polling = false
+        handler.removeCallbacks(poll)
+    }
+
+    /** A call ringing for me opens the Incoming call screen (once per call). */
+    private fun checkIncomingCall() {
+        val uid = watchedUid ?: return
+        Calls.incoming { session ->
+            session ?: return@incoming
+            val fresh = System.currentTimeMillis() - session.createdAt < CallSession.RING_TIMEOUT_MS
+            if (session.calleeId != uid || session.id == shownCallId || session.id == IncomingCallActivity.showing || !fresh || !inForeground) return@incoming
+            shownCallId = session.id
+            Notifier.cancelCall(this)
+            startActivity(
+                Intent(this, IncomingCallActivity::class.java)
+                    .putExtra(CallScreenActivity.EXTRA_CALL_ID, session.id)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
         }
+    }
+
+    /** In-app notification for a new message while you are on another Kinnect screen. */
+    private fun checkNewMessages() {
+        Api.get("chats/list.php") { result ->
+            val chats = result.json?.optJSONArray("chats")?.takeIf { result.ok } ?: return@get
+            for (i in 0 until chats.length()) {
+                val chat = chats.getJSONObject(i)
+                val other = chat.optString("otherUid")
+                val lastTime = chat.optLong("lastTime")
+                val lastMessage = chat.optString("lastMessage")
+                val previous = lastTimes.put(other, lastTime)
+                val isNew = !chatBaseline && lastTime > (previous ?: 0L) && chat.optInt("unread") > 0
+                if (!isNew || !inForeground || Push.openChatUid == other) continue
+                val name = chat.optJSONObject("user")?.optString("fullName").orEmpty().ifEmpty { "Kinnect" }
+                val alert = lastMessage.contains("took a screenshot")
+                Notifier.message(
+                    this, other, name, lastMessage,
+                    if (alert) Notifier.CHANNEL_ALERTS else Notifier.CHANNEL_MESSAGES
+                )
+            }
+            chatBaseline = false
+        }
+    }
+
+    private companion object {
+        const val POLL_MS = 3_000L
     }
 }

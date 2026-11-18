@@ -19,8 +19,8 @@ import io.agora.rtc2.RtcEngine
 import io.agora.rtc2.RtcEngineConfig
 
 /**
- * Everything the Voice call (22) and Video call screens share: following the call's status in
- * callSessions, joining the Agora channel once the call is accepted, the timer, mute and hang up.
+ * Everything the Voice call (22) and Video call screens share: following the call's status from
+ * the calls web service, joining the Agora channel once the call is accepted, the timer, mute and hang up.
  */
 abstract class CallScreenActivity : BaseActivity() {
 
@@ -32,7 +32,7 @@ abstract class CallScreenActivity : BaseActivity() {
     protected abstract val layout: Int
 
     protected var engine: RtcEngine? = null
-    private val watch = Watch()
+    private var watch: Watch? = null
     private val handler = Handler(Looper.getMainLooper())
     private var session: CallSession? = null
     private var joined = false
@@ -72,7 +72,7 @@ abstract class CallScreenActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(layout)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (callId.isEmpty() || otherUid.isEmpty() || Db.uid == null) { finish(); return }
+        if (callId.isEmpty() || otherUid.isEmpty() || Session.uid == null) { finish(); return }
 
         onTap(R.id.btn_end_call) { hangUp() }
         onTap(R.id.btn_mute) { toggleMute() }
@@ -82,8 +82,8 @@ abstract class CallScreenActivity : BaseActivity() {
             Avatars.show(findViewById(R.id.call_avatar), user, keepShape = true)
             findViewById<TextView>(R.id.call_name).text = user.fullName
         }
-        watch.on(Db.callSessions.child(callId)) { snapshot ->
-            val current = snapshot.getValue(CallSession::class.java)?.copy(id = callId) ?: return@on
+        watch = Calls.watch(callId, onGone = { hangUp() }) { current ->
+            if (finished) return@watch
             session = current
             when (current.status) {
                 CallSession.STATUS_RINGING -> if (outgoing) setStatus("Ringing…")
@@ -173,17 +173,16 @@ abstract class CallScreenActivity : BaseActivity() {
     protected fun hangUp() {
         if (finished) return
         finished = true
-        val duration = if (connectedAt > 0) (System.currentTimeMillis() - connectedAt) / 1000 else 0
-        session?.let { Calls.end(it, duration) }
+        session?.let(Calls::end)
         finish()
     }
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
-        watch.stop()
+        watch?.stop()
         if (!finished) {
             finished = true
-            session?.let { Calls.end(it, if (connectedAt > 0) (System.currentTimeMillis() - connectedAt) / 1000 else 0) }
+            session?.let(Calls::end)
         }
         engine?.let {
             it.leaveChannel()
