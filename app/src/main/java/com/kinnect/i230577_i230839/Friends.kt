@@ -1,10 +1,5 @@
 package com.kinnect.i230577_i230839
 
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.Query
-import com.google.firebase.database.ValueEventListener
-
 /** Where the signed-in user stands with someone else. Drives the Add friend → Requested → Friends button. */
 enum class FriendState(val key: String) {
     NONE("none"), REQUESTED("requested"), INCOMING("incoming"), FRIENDS("friends");
@@ -106,31 +101,17 @@ object Friends {
     private fun changed(uid: String) = listeners.toList().forEach { it(uid) }
 }
 
-/** Keeps track of value listeners so a screen can remove them all at once in onDestroy. */
+/** Keeps track of cleanups (listeners, polls) so a screen can remove them all at once in onDestroy. */
 class Watch {
-    private val active = mutableListOf<Pair<Query, ValueEventListener>>()
     private val cleanups = mutableListOf<() -> Unit>()
 
-    /** Runs [cleanup] on [stop] (for listeners that aren't Firebase ones). */
+    /** Runs [cleanup] on [stop]. */
     fun onStop(cleanup: () -> Unit): Watch {
         cleanups += cleanup
         return this
     }
 
-    /** Listens to [ref] (a path or a query) until [stop]. */
-    fun on(ref: Query, onData: (DataSnapshot) -> Unit): Watch {
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) = onData(snapshot)
-            override fun onCancelled(error: DatabaseError) = Unit
-        }
-        ref.addValueEventListener(listener)
-        active += ref to listener
-        return this
-    }
-
     fun stop() {
-        active.forEach { (ref, listener) -> ref.removeEventListener(listener) }
-        active.clear()
         cleanups.forEach { it() }
         cleanups.clear()
     }

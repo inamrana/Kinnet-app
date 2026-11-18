@@ -49,6 +49,7 @@ class OtherProfileActivity : BaseActivity() {
             showCounts(profile)
             showState(Friends.state(uid))
         }
+        Posts.byAuthor(uid) { posts -> showPhotos(posts.filter { it.images.isNotEmpty() }) }
     }
 
     /** The Photos row shows the first photo of their three newest photo posts; tapping one opens it. */
@@ -67,7 +68,7 @@ class OtherProfileActivity : BaseActivity() {
             if (post == null) return@forEachIndexed
             image.setImageDrawable(null)
             card.setOnClickListener { PostCard.openComments(this, post.id) }
-            PostImages.get(post.id) { images -> images.firstOrNull()?.let { Images.show(image, it) } }
+            Images.show(image, post.images.first())
         }
     }
 

@@ -1,8 +1,6 @@
 package com.kinnect.i230577_i230839
 
-import com.google.firebase.database.ServerValue
-
-/** One entry of the Notifications tab, stored under notifications/{uid}/{id}. */
+/** One entry of the Notifications tab (notifications/list.php). */
 data class Notice(
     val id: String = "",
     val type: String = "",
@@ -20,23 +18,8 @@ data class Notice(
     }
 }
 
-/** Writes activity notifications (reactions, comments, replies, accepted requests) for other users. */
+/** Turns notifications from the server into the sentences shown in the Notifications tab. */
 object Notices {
-
-    fun send(toUid: String, type: String, postId: String = "", text: String = "") {
-        val me = Db.uid ?: return
-        if (toUid.isEmpty() || toUid == me) return
-        Db.notifications.child(toUid).push().setValue(
-            mapOf(
-                "type" to type,
-                "fromUid" to me,
-                "postId" to postId,
-                "text" to text,
-                "read" to false,
-                "timestamp" to ServerValue.TIMESTAMP,
-            )
-        )
-    }
 
     /** The sentence shown in the Notifications tab, with the sender's name in bold. */
     fun sentence(notice: Notice, name: String): String {

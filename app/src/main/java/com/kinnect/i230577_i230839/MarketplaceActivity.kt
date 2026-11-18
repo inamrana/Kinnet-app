@@ -8,15 +8,16 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import org.json.JSONObject
 
 /**
- * 23 · Marketplace tab — "Today's picks" are live listings from marketplace/, newest first.
+ * 23 · Marketplace tab — "Today's picks" are listings from listings/list.php, newest first
+ * (cached in SQLite, so the last list shows offline).
  * Sell opens the Sell screen; Categories filters the grid; tapping an item lets you message
  * the seller (or remove your own listing).
  */
 class MarketplaceActivity : BaseActivity() {
 
-    private val watch = Watch()
     private var listings = listOf<Listing>()
     private var category: String? = null
     private lateinit var grid: LinearLayout
@@ -30,12 +31,27 @@ class MarketplaceActivity : BaseActivity() {
         tapOpens(SellActivity::class.java, R.id.btn_sell)
         onTap(R.id.btn_categories) { pickCategory() }
 
-        watch.on(Db.marketplace.orderByChild("timestamp").limitToLast(MAX_LISTINGS)) { snapshot ->
-            listings = snapshot.children.mapNotNull { child ->
-                child.getValue(Listing::class.java)?.copy(id = child.key.orEmpty())
-            }.sortedByDescending { it.timestamp }
-            showListings()
+        LocalDb.cache(CACHE_KEY)?.let { show(JSONObject(it)) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        load() // also picks up a listing just published from Sell
+    }
+
+    private fun load() {
+        Api.get("listings/list.php") { result ->
+            val json = result.json?.takeIf { result.ok } ?: return@get
+            LocalDb.putCache(CACHE_KEY, json.toString())
+            show(json)
         }
+    }
+
+    private fun show(json: JSONObject) {
+        val array = json.optJSONArray("listings") ?: return
+        listings = (0 until array.length()).map { Listing.from(array.getJSONObject(it)) }
+            .sortedByDescending { it.timestamp }
+        showListings()
     }
 
     private fun showListings() {
@@ -78,7 +94,7 @@ class MarketplaceActivity : BaseActivity() {
         val dialog = AlertDialog.Builder(this).setTitle("${listing.title} · ${listing.priceText}")
         if (listing.sellerId == Db.uid) {
             dialog.setMessage("This is your listing.")
-                .setPositiveButton("Remove listing") { _, _ -> Db.marketplace.child(listing.id).removeValue() }
+                .setPositiveButton("Remove listing") { _, _ -> remove(listing) }
                 .setNegativeButton("Close", null)
                 .show()
             return
@@ -92,6 +108,18 @@ class MarketplaceActivity : BaseActivity() {
                 .setNeutralButton("View profile") { _, _ -> PersonRow.openProfile(grid, listing.sellerId) }
                 .setNegativeButton("Close", null)
                 .show()
+        }
+    }
+
+    private fun remove(listing: Listing) {
+        Api.post("listings/delete.php", mapOf("id" to listing.id)) { result ->
+            if (!result.ok) {
+                toast(if (result.offline) "You're offline. Try again when you're connected." else result.message)
+                return@post
+            }
+            listings = listings.filter { it.id != listing.id }
+            showListings()
+            load()
         }
     }
 
@@ -109,12 +137,7 @@ class MarketplaceActivity : BaseActivity() {
 
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
-    override fun onDestroy() {
-        watch.stop()
-        super.onDestroy()
-    }
-
     private companion object {
-        const val MAX_LISTINGS = 60
+        const val CACHE_KEY = "listings"
     }
 }

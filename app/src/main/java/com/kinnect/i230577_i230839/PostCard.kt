@@ -42,13 +42,6 @@ object UserCache {
     fun names(): Map<String, String> = users.mapValues { it.value.firstName.ifEmpty { it.value.fullName } }
 }
 
-/** Photos of a post (URLs from the server, cached with the post in SQLite). */
-object PostImages {
-    fun get(postId: String, done: (List<String>) -> Unit) {
-        Posts.load(postId) { post -> post?.let { done(it.images) } }
-    }
-}
-
 /** Fills an item_post view (Home feed, Profile) with a live [Post]. */
 object PostCard {
 

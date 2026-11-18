@@ -1,72 +1,8 @@
 package com.kinnect.i230577_i230839
 
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-
-/**
- * One place for every Realtime Database path Kinnect uses.
- *
- * users/{uid}                         -> [User]
- * usernames/{usernameKey}             -> uid (keeps usernames unique; see [usernameKey])
- * friendRequests/{toUid}/{fromUid}    -> time the request was sent (incoming requests)
- * sentRequests/{fromUid}/{toUid}      -> time (outgoing requests, for the "Requested" state)
- * friends/{uid}/{friendUid}           -> time they became friends
- * chats/{chatId}/messages/{id}        -> [Message]
- * userChats/{uid}/{otherUid}          -> [ChatSummary] (the Chats list)
- * posts/{postId}                      -> [Post]
- * postImages/{postId}/{index}         -> Base64 JPEG of each photo in a post
- * comments/{postId}/{commentId}       -> [Comment]
- * stories/{ownerUid}/{storyId}        -> [Story] (shown for 24 hours)
- * storyMedia/{storyId}                -> Base64 photo or video of a story
- * closeFriends/{uid}/{friendUid}      -> true (who sees "Close friends" stories)
- * notifications/{uid}/{id}            -> [Notice] (Notifications tab)
- * callSessions/{callId}               -> [CallSession] (status of a call)
- * calls/{uid}                         -> id of the call ringing for that user
- * callLogs/{uid}/{id}                 -> [CallLog]
- * fcmTokens/{uid}                     -> device token for push notifications
- * marketplace/{listingId}             -> [Listing] (Marketplace "Today's picks")
- * recentSearches/{uid}/{key}          -> text + time (Search "Recent searches")
- */
+/** The signed-in user's id, from the session token issued by the PHP backend. */
 object Db {
-
-    /** The signed-in user, from the session token issued by the PHP backend. */
     val uid: String? get() = Session.uid
-
-    private val root: DatabaseReference get() = FirebaseDatabase.getInstance().reference
-
-    val users: DatabaseReference get() = root.child("users")
-    val usernames: DatabaseReference get() = root.child("usernames")
-    val friendRequests: DatabaseReference get() = root.child("friendRequests")
-    val sentRequests: DatabaseReference get() = root.child("sentRequests")
-    val friends: DatabaseReference get() = root.child("friends")
-    val chats: DatabaseReference get() = root.child("chats")
-    val userChats: DatabaseReference get() = root.child("userChats")
-    val posts: DatabaseReference get() = root.child("posts")
-    val postImages: DatabaseReference get() = root.child("postImages")
-    val comments: DatabaseReference get() = root.child("comments")
-    val stories: DatabaseReference get() = root.child("stories")
-    val storyMedia: DatabaseReference get() = root.child("storyMedia")
-    val closeFriends: DatabaseReference get() = root.child("closeFriends")
-    val notifications: DatabaseReference get() = root.child("notifications")
-    val calls: DatabaseReference get() = root.child("calls")
-    val callSessions: DatabaseReference get() = root.child("callSessions")
-    val callLogs: DatabaseReference get() = root.child("callLogs")
-    val fcmTokens: DatabaseReference get() = root.child("fcmTokens")
-    val marketplace: DatabaseReference get() = root.child("marketplace")
-    val recentSearches: DatabaseReference get() = root.child("recentSearches")
-
-    /** Writes several paths at once (all succeed or none do). Keys are full paths like "friends/a/b". */
-    fun update(paths: Map<String, Any?>) = root.updateChildren(paths)
-
-    /** Database keys cannot contain ".", so "jacob.west" is stored as "jacob,west". */
-    fun usernameKey(username: String): String = username.replace('.', ',')
-
-    fun user(uid: String): DatabaseReference = users.child(uid)
-    fun me(): DatabaseReference? = uid?.let(::user)
-
-    /** Both people in a one-to-one chat get the same id, whoever opens it first. */
-    fun chatId(a: String, b: String): String = if (a < b) "${a}_$b" else "${b}_$a"
-    fun messages(chatId: String): DatabaseReference = chats.child(chatId).child("messages")
 }
 
 /**
@@ -115,7 +51,7 @@ data class ChatSummary(
     val unread: Int = 0,
 )
 
-/** A Kinnect account as stored under users/{uid}. Default values are needed by Firebase. */
+/** A Kinnect account, in the shape the web services return (see user_json in backend/lib.php). */
 data class User(
     val uid: String = "",
     val firstName: String = "",
