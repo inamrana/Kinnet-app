@@ -27,6 +27,7 @@ class KinnectApp : Application() {
         LocalDb.init(this)
         Session.init(this)
         Images.init(this)
+        Outbox.init(this)
         Notifier.createChannels(this)
         Friends // registers for sync results
         Sync.start(this)

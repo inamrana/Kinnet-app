@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Folders the app shares with the camera app (photos taken for posts) -->
+<!-- Folders the app shares with other apps (camera photos for posts, media, files waiting to upload) -->
 <paths>
     <cache-path name="camera" path="camera/" />
     <cache-path name="media" path="media/" />
+    <files-path name="outbox" path="outbox/" />
 </paths>

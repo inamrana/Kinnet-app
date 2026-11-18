@@ -29,7 +29,6 @@ import kotlin.math.max
 open class BaseActivity : AppCompatActivity() {
 
     private var onImagePicked: ((Uri) -> Unit)? = null
-    private val badgeWatch = Watch()
     private val imagePicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { onImagePicked?.invoke(it) }
         onImagePicked = null
@@ -38,6 +37,12 @@ open class BaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
+    /** Opens the picker for a MIME type (a photo, a video or any file) and hands back the chosen item's Uri. */
+    protected fun pickImageUri(mime: String = "image/*", onPicked: (Uri) -> Unit) {
+        onImagePicked = onPicked
+        imagePicker.launch(mime)
     }
 
     /** Opens the gallery and hands back the chosen photo as a compressed JPEG file, ready to upload. */
@@ -133,16 +138,36 @@ open class BaseActivity : AppCompatActivity() {
      * unread messages on the Chats button.
      */
     private fun watchBadges() {
-        val me = Db.uid ?: return
-        var requests = 0
-        var unreadNotices = 0
-        fun showBell() = showBadge(R.id.badge_notifications, requests + unreadNotices)
-        badgeWatch
-            .on(Db.friendRequests.child(me)) { requests = it.childrenCount.toInt(); showBell() }
-            .on(Db.notifications.child(me).orderByChild("read").equalTo(false)) { unreadNotices = it.childrenCount.toInt(); showBell() }
-            .on(Db.userChats.child(me)) { snapshot ->
-                showBadge(R.id.badge_chats, snapshot.children.count { (it.child("unread").getValue(Int::class.java) ?: 0) > 0 })
+        badgesOn = true
+        LocalDb.cache("badges")?.let { showBadges(org.json.JSONObject(it)) }
+    }
+
+    private var badgesOn = false
+    private val badgeHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val badgePoll = object : Runnable {
+        override fun run() {
+            Api.get("badges.php") { result ->
+                val json = result.json?.takeIf { result.ok } ?: return@get
+                LocalDb.putCache("badges", json.toString())
+                showBadges(json)
             }
+            badgeHandler.postDelayed(this, 15_000)
+        }
+    }
+
+    private fun showBadges(json: org.json.JSONObject) {
+        showBadge(R.id.badge_notifications, json.optInt("requests") + json.optInt("unreadNotices"))
+        showBadge(R.id.badge_chats, json.optInt("unreadChats"))
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (badgesOn && Session.isLoggedIn) badgeHandler.post(badgePoll)
+    }
+
+    override fun onPause() {
+        badgeHandler.removeCallbacks(badgePoll)
+        super.onPause()
     }
 
     private fun showBadge(id: Int, count: Int) {
@@ -153,7 +178,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        badgeWatch.stop()
+        badgeHandler.removeCallbacks(badgePoll)
         super.onDestroy()
     }
 

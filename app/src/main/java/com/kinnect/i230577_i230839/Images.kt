@@ -40,6 +40,9 @@ object Images {
 
     fun isUrl(source: String) = source.startsWith("http://") || source.startsWith("https://")
 
+    /** A photo still waiting in the [Outbox] (shown while its post or message is pending). */
+    fun isLocalFile(source: String) = source.startsWith("/")
+
     /** Reads [uri], scales its longest side down to [maxSide] px and returns Base64 JPEG text. */
     fun encode(context: Context, uri: Uri, maxSide: Int = 900): String? =
         scaled(context, uri, maxSide)?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
@@ -72,9 +75,13 @@ object Images {
         return bytes.toByteArray()
     }
 
-    /** Decodes Base64 photo text (legacy). URLs go through [load]. */
+    /** Decodes Base64 photo text (legacy) or an outbox file. URLs go through [load]. */
     fun decode(source: String): Bitmap? {
         if (source.isEmpty() || isUrl(source)) return if (isUrl(source)) cache.get(source) else null
+        if (isLocalFile(source)) {
+            cache.get(source)?.let { return it }
+            return BitmapFactory.decodeFile(source)?.also { cache.put(source, it) }
+        }
         val key = source.hashCode().toString()
         cache.get(key)?.let { return it }
         return runCatching {

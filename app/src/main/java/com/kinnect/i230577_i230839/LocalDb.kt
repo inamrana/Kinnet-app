@@ -15,7 +15,10 @@ import org.json.JSONObject
  * friend_links    my relation to each person: friends / requested / incoming
  * pending_actions queued actions, oldest first, each with a client UUID
  * recent_searches Search history
- * cache           other server lists by key (suggestions, …)
+ * cache           other server lists by key (suggestions, chats, …)
+ * posts / comments / stories / messages
+ *                 one row per item: id, parent (post id / owner / chat partner), sort time,
+ *                 pending flag (created offline, not on the server yet) and the item's JSON
  */
 object LocalDb {
 
@@ -26,7 +29,7 @@ object LocalDb {
         helper = Helper(context.applicationContext)
     }
 
-    private class Helper(context: Context) : SQLiteOpenHelper(context, "kinnect.db", null, 1) {
+    private class Helper(context: Context) : SQLiteOpenHelper(context, "kinnect.db", null, 2) {
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL("CREATE TABLE users (id TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at INTEGER NOT NULL)")
             db.execSQL("CREATE TABLE friend_links (user_id TEXT PRIMARY KEY, state TEXT NOT NULL, time INTEGER NOT NULL DEFAULT 0, mutual INTEGER NOT NULL DEFAULT 0)")
@@ -44,9 +47,70 @@ object LocalDb {
             )
             db.execSQL("CREATE TABLE recent_searches (text TEXT PRIMARY KEY, time INTEGER NOT NULL)")
             db.execSQL("CREATE TABLE cache (key TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at INTEGER NOT NULL)")
+            createItemTables(db)
         }
 
-        override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+            if (oldVersion < 2) createItemTables(db)
+        }
+
+        private fun createItemTables(db: SQLiteDatabase) {
+            ITEM_TABLES.forEach { table ->
+                db.execSQL(
+                    """CREATE TABLE IF NOT EXISTS $table (
+                        id TEXT PRIMARY KEY,
+                        parent TEXT NOT NULL DEFAULT '',
+                        sort INTEGER NOT NULL,
+                        pending INTEGER NOT NULL DEFAULT 0,
+                        json TEXT NOT NULL)"""
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS idx_${table}_parent ON $table (parent, sort)")
+            }
+        }
+    }
+
+    private val ITEM_TABLES = listOf("posts", "comments", "stories", "messages")
+
+    // ---- posts, comments, stories, messages ------------------------------------------------
+
+    class Item(val id: String, val parent: String, val sort: Long, val pending: Boolean, val json: JSONObject)
+
+    fun putItem(table: String, id: String, parent: String, sort: Long, json: JSONObject, pending: Boolean = false) {
+        db.insertWithOnConflict(table, null, ContentValues().apply {
+            put("id", id); put("parent", parent); put("sort", sort)
+            put("pending", if (pending) 1 else 0); put("json", json.toString())
+        }, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun item(table: String, id: String): Item? =
+        db.rawQuery("SELECT id, parent, sort, pending, json FROM $table WHERE id = ?", arrayOf(id)).use { c ->
+            if (c.moveToFirst()) Item(c.getString(0), c.getString(1), c.getLong(2), c.getInt(3) == 1, JSONObject(c.getString(4))) else null
+        }
+
+    /** Items of one table (optionally for one parent), oldest first by default. */
+    fun items(table: String, parent: String? = null, newestFirst: Boolean = false, limit: Int = 500): List<Item> {
+        val where = if (parent == null) "" else "WHERE parent = ?"
+        val args = if (parent == null) null else arrayOf(parent)
+        val order = if (newestFirst) "DESC" else "ASC"
+        return db.rawQuery("SELECT id, parent, sort, pending, json FROM $table $where ORDER BY sort $order, id $order LIMIT $limit", args).use { c ->
+            buildList { while (c.moveToNext()) add(Item(c.getString(0), c.getString(1), c.getLong(2), c.getInt(3) == 1, JSONObject(c.getString(4)))) }
+        }
+    }
+
+    fun deleteItem(table: String, id: String) {
+        db.delete(table, "id = ?", arrayOf(id))
+    }
+
+    /** Replaces the server-side rows (of one parent, if given) with [items]; offline-created rows stay. */
+    fun replaceItems(table: String, parent: String?, items: List<Item>) = db.runInTx {
+        if (parent == null) db.delete(table, "pending = 0", null)
+        else db.delete(table, "pending = 0 AND parent = ?", arrayOf(parent))
+        items.forEach { putItem(table, it.id, it.parent, it.sort, it.json, it.pending) }
+    }
+
+    /** Removes rows older than [cutoff] (e.g. stories past 24 hours). */
+    fun deleteOlderThan(table: String, cutoff: Long) {
+        db.delete(table, "sort < ? AND pending = 0", arrayOf(cutoff.toString()))
     }
 
     // ---- users -----------------------------------------------------------------------------
@@ -161,7 +225,7 @@ object LocalDb {
 
     /** Log out: nothing from this account may stay on the device. */
     fun clearAll() = db.runInTx {
-        listOf("users", "friend_links", "pending_actions", "recent_searches", "cache").forEach { db.delete(it, null, null) }
+        (listOf("users", "friend_links", "pending_actions", "recent_searches", "cache") + ITEM_TABLES).forEach { db.delete(it, null, null) }
     }
 
     private inline fun SQLiteDatabase.runInTx(block: () -> Unit) {

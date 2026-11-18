@@ -6,6 +6,7 @@ import android.net.Network
 import android.os.Handler
 import android.os.Looper
 import org.json.JSONObject
+import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -25,7 +26,13 @@ object Sync {
     @Volatile private var again = false
 
     /** One queued action that reached the server (or was rejected by it). */
-    class Done(val type: String, val target: String, val response: JSONObject?, val rejectedMessage: String?)
+    class Done(
+        val type: String,
+        val target: String,
+        val clientId: String,
+        val response: JSONObject?,
+        val rejectedMessage: String?,
+    )
 
     fun start(context: Context) {
         val connectivity = context.getSystemService(ConnectivityManager::class.java)
@@ -59,13 +66,34 @@ object Sync {
     /**
      * Saves the action and tries to send it. [type] groups actions for "pending" badges
      * (e.g. "friend"), [target] is what it is about (e.g. the other user's id).
+     * [files] maps upload field names to files already copied into the app's [Outbox]; they are
+     * uploaded with the action and deleted once the server has them.
      */
-    fun enqueue(type: String, endpoint: String, fields: Map<String, Any?>, target: String = ""): String {
-        val clientId = UUID.randomUUID().toString()
-        LocalDb.addPending(clientId, type, endpoint, Api.toJson(fields), target)
+    fun enqueue(
+        type: String,
+        endpoint: String,
+        fields: Map<String, Any?>,
+        target: String = "",
+        files: Map<String, File> = emptyMap(),
+        clientId: String = newClientId(),
+    ): String {
+        val payload = Api.toJson(fields)
+        if (files.isNotEmpty()) payload.put(FILES_KEY, JSONObject().apply { files.forEach { (k, f) -> put(k, f.absolutePath) } })
+        LocalDb.addPending(clientId, type, endpoint, payload, target)
         flush()
         return clientId
     }
+
+    fun newClientId(): String = UUID.randomUUID().toString()
+
+    /** How a queued action refers to an item it created: its server id, or "c:<uuid>" if not synced yet. */
+    fun ref(id: String): String = if (id.startsWith(LOCAL_PREFIX)) "c:" + id.removePrefix(LOCAL_PREFIX) else id
+
+    /** Local id for something created on this phone before the server has it. */
+    fun localId(clientId: String) = LOCAL_PREFIX + clientId
+
+    const val LOCAL_PREFIX = "local:"
+    private const val FILES_KEY = "_files"
 
     fun isPending(type: String, target: String) = target in LocalDb.pendingTargets(type)
 
@@ -81,15 +109,19 @@ object Sync {
             var reachedServer = true
             try {
                 for (action in LocalDb.pending()) {
+                    val files = action.payload.optJSONObject(FILES_KEY)?.let { json ->
+                        json.keys().asSequence().associateWith { File(json.getString(it)) }.filterValues { it.exists() }
+                    }.orEmpty()
                     val fields = buildMap<String, Any?> {
-                        action.payload.keys().forEach { put(it, action.payload.get(it)) }
+                        action.payload.keys().forEach { if (it != FILES_KEY) put(it, action.payload.get(it)) }
                         put("clientId", action.clientId)
                     }
-                    val result = Api.request("POST", action.endpoint, fields)
+                    val result = Api.request("POST", action.endpoint, fields, files)
                     when {
                         result.ok -> {
                             LocalDb.removePending(action.localId)
-                            notify(Done(action.type, action.target, result.json, null))
+                            files.values.forEach { it.delete() }
+                            notify(Done(action.type, action.target, action.clientId, result.json, null))
                         }
                         result.offline || result.code >= 500 -> {
                             // Keep it, in order, and try again when the network or server is back
@@ -101,7 +133,8 @@ object Sync {
                         else -> {
                             // The server refused it (e.g. edit window passed): drop it so the queue moves on
                             LocalDb.removePending(action.localId)
-                            notify(Done(action.type, action.target, result.json, result.message))
+                            files.values.forEach { it.delete() }
+                            notify(Done(action.type, action.target, action.clientId, result.json, result.message))
                         }
                     }
                 }
