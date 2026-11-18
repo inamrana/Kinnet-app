@@ -122,7 +122,8 @@ function media_url(string $path): string
 {
     if ($path === '') return '';
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $base = rtrim(dirname($_SERVER['SCRIPT_NAME'], substr_count(script_rel(), '/') + 1), '/');
+    // dirname() gives "\" for the web root on Windows, so normalise slashes before trimming
+    $base = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'], substr_count(script_rel(), '/') + 1)), '/');
     return "$scheme://{$_SERVER['HTTP_HOST']}$base/$path";
 }
 
@@ -408,6 +409,62 @@ function message_json(array $m): array
 
 /** Own messages can be edited or deleted for this long after sending (checked on the server). */
 const EDIT_WINDOW_SECONDS = 5 * 60;
+
+// ---- calls and marketplace -----------------------------------------------------------------
+
+/** A call nobody answered within this long counts as missed. */
+const RING_TIMEOUT_SECONDS = 40;
+
+/** Marks calls that have rung for too long as missed, so a stale call never rings again. */
+function expire_calls(): void
+{
+    q("UPDATE calls SET status = 'missed', ended_at = UTC_TIMESTAMP()
+       WHERE status = 'ringing' AND created_at < UTC_TIMESTAMP() - INTERVAL " . RING_TIMEOUT_SECONDS . ' SECOND');
+}
+
+/** One call in the app's CallSession shape; the duration is worked out from the server's clock. */
+function call_json(array $c): array
+{
+    $duration = $c['accepted_at'] && $c['ended_at']
+        ? max(0, strtotime($c['ended_at'] . ' UTC') - strtotime($c['accepted_at'] . ' UTC')) : 0;
+    return [
+        'id' => (string)$c['id'],
+        'callerId' => (string)$c['caller_id'],
+        'calleeId' => (string)$c['callee_id'],
+        'video' => (bool)$c['video'],
+        'status' => $c['status'],
+        'createdAt' => ms($c['created_at']),
+        'acceptedAt' => ms($c['accepted_at']),
+        'endedAt' => ms($c['ended_at']),
+        'durationSec' => $duration,
+    ];
+}
+
+/** A call I took part in, or a 404 (so nobody can read or change someone else's call). */
+function my_call(int $me, string $ref): array
+{
+    // Calls are never created offline, so they always have a server id
+    $id = ctype_digit($ref) ? (int)$ref : fail('Call not found', 404);
+    $call = q('SELECT * FROM calls WHERE id = ? AND (caller_id = ? OR callee_id = ?)', [$id, $me, $me])->fetch();
+    return $call ?: fail('Call not found', 404);
+}
+
+function listing_json(array $l): array
+{
+    return [
+        'id' => (string)$l['id'],
+        'clientId' => $l['client_id'] ?? '',
+        'sellerId' => (string)$l['seller_id'],
+        'title' => $l['title'],
+        'price' => (int)$l['price'],
+        'location' => $l['location'],
+        'category' => $l['category'],
+        'image' => media_url($l['image']),
+        'timestamp' => ms($l['created_at']),
+    ];
+}
+
+const LISTING_CATEGORIES = ['Vehicles', 'Furniture', 'Electronics', 'Home & garden', 'Clothing', 'Books', 'Other'];
 
 // ---- push notifications (FCM HTTP v1) ------------------------------------------------------
 
