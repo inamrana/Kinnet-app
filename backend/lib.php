@@ -138,7 +138,9 @@ const ONLINE_WINDOW_SECONDS = 70;
 
 function ms(?string $datetime): int
 {
-    return $datetime ? (int)(strtotime($datetime . ' UTC') * 1000) : 0;
+    if (!$datetime) return 0;
+    $parsed = DateTime::createFromFormat('Y-m-d H:i:s.u', strlen($datetime) > 19 ? $datetime : "$datetime.000", new DateTimeZone('UTC'));
+    return $parsed ? (int)$parsed->format('Uv') : 0;
 }
 
 /** A user row in the same shape as the app's User class. */
@@ -261,6 +263,232 @@ function once(string $clientId, int $uid, callable $action): never
 
 function notify(int $userId, int $fromId, string $type, string $targetId = '', string $text = ''): void
 {
+    if ($userId === $fromId) return;
     q('INSERT INTO notifications (user_id, from_id, type, target_id, text) VALUES (?, ?, ?, ?, ?)',
         [$userId, $fromId, $type, $targetId, $text]);
+}
+
+/**
+ * Turns a reference sent by the app into a row id. Something created offline doesn't have a
+ * server id yet, so later queued actions refer to it as "c:<its client UUID>"; the queue runs in
+ * order, so by then the server has created it and can look it up.
+ */
+function resolve_id(string $ref, string $table): ?int
+{
+    if ($ref === '') return null;
+    if (ctype_digit($ref)) return (int)$ref;
+    if (str_starts_with($ref, 'c:')) {
+        $id = q("SELECT id FROM $table WHERE client_id = ?", [substr($ref, 2)])->fetchColumn();
+        return $id === false ? null : (int)$id;
+    }
+    return null;
+}
+
+// ---- posts, comments, stories, messages as app JSON ----------------------------------------
+
+function post_json(array $p): array
+{
+    $images = q('SELECT path FROM post_images WHERE post_id = ? ORDER BY idx', [$p['id']])->fetchAll(PDO::FETCH_COLUMN);
+    $reactions = [];
+    foreach (q('SELECT user_id, type FROM reactions WHERE post_id = ?', [$p['id']])->fetchAll() as $r) {
+        $reactions[(string)$r['user_id']] = $r['type'];
+    }
+    $comments = (int)q('SELECT COUNT(*) FROM comments WHERE post_id = ?', [$p['id']])->fetchColumn();
+    return [
+        'id' => (string)$p['id'],
+        'clientId' => $p['client_id'] ?? '',
+        'authorId' => (string)$p['author_id'],
+        'text' => $p['text'],
+        'bgColor' => $p['bg_color'],
+        'images' => array_map('media_url', $images),
+        'imageCount' => count($images),
+        'reactions' => (object)$reactions,
+        'commentCount' => $comments,
+        'shareCount' => (int)$p['share_count'],
+        'timestamp' => ms($p['created_at']),
+    ];
+}
+
+function comment_json(array $c): array
+{
+    $likes = [];
+    foreach (q('SELECT user_id FROM comment_likes WHERE comment_id = ?', [$c['id']])->fetchAll(PDO::FETCH_COLUMN) as $uid) {
+        $likes[(string)$uid] = true;
+    }
+    return [
+        'id' => (string)$c['id'],
+        'clientId' => $c['client_id'] ?? '',
+        'postId' => (string)$c['post_id'],
+        'authorId' => (string)$c['author_id'],
+        'text' => $c['text'],
+        'image' => media_url($c['image']),
+        'parentId' => $c['parent_id'] === null ? '' : (string)$c['parent_id'],
+        'replyToName' => $c['reply_to_name'],
+        'likes' => (object)$likes,
+        'timestamp' => ms($c['created_at']),
+    ];
+}
+
+const STORY_LIFETIME_HOURS = 24;
+
+function story_json(array $s, int $me): array
+{
+    $viewers = [];
+    $reactions = [];
+    if ((int)$s['owner_id'] === $me) {
+        foreach (q('SELECT user_id, reaction, viewed_at FROM story_views WHERE story_id = ?', [$s['id']])->fetchAll() as $v) {
+            $viewers[(string)$v['user_id']] = ms($v['viewed_at']);
+            if ($v['reaction'] !== '') $reactions[(string)$v['user_id']] = $v['reaction'];
+        }
+    } elseif ($row = q('SELECT viewed_at FROM story_views WHERE story_id = ? AND user_id = ?', [$s['id'], $me])->fetch()) {
+        $viewers[(string)$me] = ms($row['viewed_at']);
+    }
+    return [
+        'id' => (string)$s['id'],
+        'clientId' => $s['client_id'] ?? '',
+        'ownerId' => (string)$s['owner_id'],
+        'type' => $s['is_video'] ? 'video' : 'image',
+        'media' => media_url($s['media_path']),
+        'thumb' => media_url($s['thumb_path'] ?: ($s['is_video'] ? '' : $s['media_path'])),
+        'label' => $s['label'],
+        'labelStyle' => $s['label_style'],
+        'labelX' => (float)$s['label_x'],
+        'labelY' => (float)$s['label_y'],
+        'audience' => $s['audience'],
+        'timestamp' => ms($s['created_at']),
+        'viewers' => (object)$viewers,
+        'reactions' => (object)$reactions,
+    ];
+}
+
+/** The chat line shown in Chats and notifications for a message. */
+function message_preview(array $m): string
+{
+    if ($m['deleted']) return 'Message deleted';
+    return match ($m['type']) {
+        'image' => 'Sent a photo',
+        'video' => 'Sent a video',
+        'file' => 'Sent a file: ' . $m['file_name'],
+        'post' => 'Shared a post',
+        default => $m['text'],
+    };
+}
+
+function message_json(array $m): array
+{
+    $hearts = [];
+    foreach (q('SELECT user_id FROM message_hearts WHERE message_id = ?', [$m['id']])->fetchAll(PDO::FETCH_COLUMN) as $uid) {
+        $hearts[(string)$uid] = true;
+    }
+    $replySender = '';
+    if ($m['reply_to_id']) {
+        $replySender = (string)(q('SELECT sender_id FROM messages WHERE id = ?', [$m['reply_to_id']])->fetchColumn() ?: '');
+    }
+    return [
+        'id' => (string)$m['id'],
+        'clientId' => $m['client_id'] ?? '',
+        'senderId' => (string)$m['sender_id'],
+        'receiverId' => (string)$m['receiver_id'],
+        'type' => $m['type'],
+        'text' => $m['deleted'] ? '' : $m['text'],
+        'media' => $m['deleted'] ? '' : media_url($m['media_path']),
+        'fileName' => $m['file_name'],
+        'postId' => $m['post_id'] === null ? '' : (string)$m['post_id'],
+        'replyToId' => $m['reply_to_id'] === null ? '' : (string)$m['reply_to_id'],
+        'replyToText' => $m['reply_to_text'],
+        'replyToSender' => $replySender,
+        'edited' => (bool)$m['edited'],
+        'deleted' => (bool)$m['deleted'],
+        'read' => (bool)$m['is_read'],
+        'hearts' => (object)$hearts,
+        'timestamp' => ms($m['created_at']),
+        'updatedAt' => ms($m['updated_at']),
+    ];
+}
+
+/** Own messages can be edited or deleted for this long after sending (checked on the server). */
+const EDIT_WINDOW_SECONDS = 5 * 60;
+
+// ---- push notifications (FCM HTTP v1) ------------------------------------------------------
+
+/**
+ * Sends a data-only, high-priority FCM message to $userId's device, so the app builds the
+ * notification even when it is closed. Needs the Firebase service-account JSON at
+ * config['fcm_service_account'] (git-ignored); without it pushes are skipped silently.
+ */
+function push_to(int $userId, array $data): void
+{
+    global $config;
+    $token = q('SELECT token FROM fcm_tokens WHERE user_id = ?', [$userId])->fetchColumn();
+    $file = $config['fcm_service_account'];
+    if (!$token || !is_file($file)) return;
+    $account = json_decode((string)file_get_contents($file), true);
+    $access = fcm_access_token($account);
+    if (!$access) return;
+
+    $body = json_encode(['message' => [
+        'token' => $token,
+        'data' => array_map('strval', $data),
+        'android' => ['priority' => 'high'],
+    ]]);
+    $ch = curl_init("https://fcm.googleapis.com/v1/projects/{$account['project_id']}/messages:send");
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_HTTPHEADER => ["Authorization: Bearer $access", 'Content-Type: application/json'],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 8,
+    ]);
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    // The app was reinstalled or logged out: forget the dead token
+    if ($status === 404 || ($status === 400 && str_contains((string)$response, 'UNREGISTERED'))) {
+        q('DELETE FROM fcm_tokens WHERE user_id = ? AND token = ?', [$userId, $token]);
+    } elseif ($status !== 200) {
+        error_log("[kinnect] FCM push failed ($status): $response");
+    }
+}
+
+/** OAuth access token for FCM from the service account (a signed JWT), cached for 50 minutes. */
+function fcm_access_token(array $account): ?string
+{
+    $cache = sys_get_temp_dir() . '/kinnect_fcm_token.json';
+    $cached = is_file($cache) ? json_decode((string)file_get_contents($cache), true) : null;
+    if ($cached && $cached['expires'] > time() + 60) return $cached['token'];
+
+    $b64 = fn($v) => rtrim(strtr(base64_encode($v), '+/', '-_'), '=');
+    $now = time();
+    $header = $b64(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+    $claims = $b64(json_encode([
+        'iss' => $account['client_email'],
+        'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+        'aud' => $account['token_uri'],
+        'iat' => $now,
+        'exp' => $now + 3600,
+    ]));
+    if (!openssl_sign("$header.$claims", $signature, $account['private_key'], OPENSSL_ALGO_SHA256)) return null;
+    $jwt = "$header.$claims." . $b64($signature);
+
+    $ch = curl_init($account['token_uri']);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query(['grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer', 'assertion' => $jwt]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 8,
+    ]);
+    $result = json_decode((string)curl_exec($ch), true);
+    curl_close($ch);
+    if (empty($result['access_token'])) {
+        error_log('[kinnect] FCM auth failed: ' . json_encode($result));
+        return null;
+    }
+    file_put_contents($cache, json_encode(['token' => $result['access_token'], 'expires' => $now + 3000]));
+    return $result['access_token'];
+}
+
+/** The server's clock in ms, so the app can ask "what changed since …" without trusting its own clock. */
+function now_ms(): int
+{
+    return (int)(microtime(true) * 1000);
 }

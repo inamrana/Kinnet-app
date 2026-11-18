@@ -199,7 +199,8 @@ CREATE TABLE IF NOT EXISTS messages (
     deleted       TINYINT(1)   NOT NULL DEFAULT 0,
     is_read       TINYINT(1)   NOT NULL DEFAULT 0,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- millisecond precision: the app polls for messages changed since its last sync
+    updated_at    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     INDEX idx_messages_pair (sender_id, receiver_id, id),
     INDEX idx_messages_updated (updated_at)
 ) ENGINE=InnoDB;

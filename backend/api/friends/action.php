@@ -22,6 +22,9 @@ once(param('clientId'), $me, function () use ($me, $other, $action) {
             } elseif ($state === 'none') {
                 q('INSERT IGNORE INTO friend_requests (from_id, to_id) VALUES (?, ?)', [$me, $other]);
                 notify($other, $me, 'friend_request');
+                $name = find_user($me)['full_name'];
+                push_to($other, ['type' => 'friend', 'kind' => 'friend_request', 'fromUid' => (string)$me,
+                                 'title' => 'Friend request', 'body' => "$name sent you a friend request"]);
             }
             break;
         case 'cancel':
