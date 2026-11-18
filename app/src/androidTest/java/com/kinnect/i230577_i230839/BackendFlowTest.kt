@@ -20,25 +20,28 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
-import com.google.android.gms.tasks.Tasks
-import com.google.firebase.auth.FirebaseAuth
 import org.hamcrest.Matcher
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.concurrent.TimeUnit
 
-
+/**
+ * Runs against the real Kinnect PHP backend at BuildConfig.API_BASE (server.properties).
+ * Needs one test account with a finished profile and one friend, passed as instrumentation
+ * arguments testEmail, testPassword and testFriendUid (the friend's numeric user id).
+ */
 @RunWith(AndroidJUnit4::class)
 class BackendFlowTest {
 
     private val args = InstrumentationRegistry.getArguments()
-    private val email = args.getString("testEmail") ?: "kinnect.tester.a@example.com"
-    private val password = args.getString("testPassword") ?: "Kinnect#2026"
-    private val friendUid = args.getString("testFriendUid") ?: "TOL2t8fwkwX1b0LSu3nv3fW20Rx2"
+    private val email = args.getString("testEmail").orEmpty()
+    private val password = args.getString("testPassword").orEmpty()
+    private val friendUid = args.getString("testFriendUid").orEmpty()
 
     @Before
     fun signedOut() {
@@ -53,28 +56,29 @@ class BackendFlowTest {
         ).forEach { permission ->
             runCatching { instrumentation.uiAutomation.grantRuntimePermission(pkg, permission) }
         }
-        FirebaseAuth.getInstance().signOut()
+        signOutLocally()
     }
 
-    /** Log in with Firebase Auth → Home → Menu → Log out returns to Log in with an empty back stack. */
+    /** Log in through auth/login.php → Home → Menu → Log out returns to Log in with an empty back stack. */
     @Test
-    fun logInWithFirebaseThenLogOutClearsBackStack() {
+    fun logInThenLogOutClearsBackStack() {
         assumeTrue("Pass testEmail and testPassword to run this test", email.isNotEmpty() && password.isNotEmpty())
         ActivityScenario.launch(LoginActivity::class.java).use {
             onView(withId(R.id.input_email)).perform(scrollTo(), clearText(), replaceText(email))
             onView(withId(R.id.input_password)).perform(scrollTo(), clearText(), replaceText(password), closeSoftKeyboard())
             onView(withId(R.id.btn_login)).perform(scrollTo(), click())
 
-            // Firebase answers asynchronously, so wait for Home to appear
+            // The web service answers asynchronously, so wait for Home to appear
             waitFor(withId(R.id.home_root))
-            assertEquals(FirebaseAuth.getInstance().currentUser?.email, email)
+            assertTrue("Logging in must store a session token", Session.isLoggedIn)
+            assertEquals(email.lowercase(), Session.user?.email)
 
             onView(withId(R.id.tab_menu)).perform(click())
             waitFor(withId(R.id.menu_root))
             onView(withId(R.id.btn_logout)).perform(scrollTo(), click())
 
             waitFor(withId(R.id.login_root))
-            assertTrue("Log out must sign out of Firebase", FirebaseAuth.getInstance().currentUser == null)
+            assertFalse("Log out must clear the session token", Session.isLoggedIn)
 
             pressBackUnconditionally()
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
@@ -86,12 +90,16 @@ class BackendFlowTest {
         }
     }
 
-    /** Signed in, open a chat, send a message: it shows in the thread and is saved in the database. */
+    /** Signed in, open a chat, send a message: it shows in the thread and is saved on the server. */
     @Test
     fun sentMessageAppearsInChatAndIsSaved() {
         assumeTrue("Pass testEmail, testPassword and testFriendUid to run this test",
             email.isNotEmpty() && password.isNotEmpty() && friendUid.isNotEmpty())
-        val user = Tasks.await(FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password), 30, TimeUnit.SECONDS).user!!
+        // Log in straight through the web service (the UI login is covered by the test above)
+        val login = Api.request("POST", "auth/login.php", mapOf("email" to email, "password" to password), token = null)
+        assertTrue("Log in failed: ${login.message}", login.ok)
+        val me = login.json!!.getJSONObject("user").toUser()
+        Session.save(login.json!!.getString("token"), me)
         val text = "Espresso check ${System.currentTimeMillis()}"
 
         val intent = Intent(ApplicationProvider.getApplicationContext(), ChatActivity::class.java)
@@ -101,16 +109,38 @@ class BackendFlowTest {
             onView(withId(R.id.input_message)).perform(replaceText(text), closeSoftKeyboard())
             onView(withId(R.id.btn_send)).perform(click())
 
-            // The message comes back through the Realtime Database listener
+            // Shown at once (sent offline-first), then confirmed by the server
             waitFor(withText(text))
-
-            val chatId = Db.chatId(user.uid, friendUid)
-            val last = Tasks.await(Db.messages(chatId).orderByChild("timestamp").limitToLast(1).get(), 30, TimeUnit.SECONDS)
-            val saved = last.children.first().getValue(Message::class.java)
-            assertEquals(text, saved?.text)
-            assertEquals(user.uid, saved?.senderId)
+            val saved = waitForSavedMessage(text)
+            assertNotNull("The message never reached the server", saved)
+            assertEquals(me.uid, saved!!.optString("senderId"))
+            assertEquals(friendUid, saved.optString("receiverId"))
         }
-        FirebaseAuth.getInstance().signOut()
+        signOutLocally()
+    }
+
+    /** Asks messages/sync.php until the conversation contains [text], or gives up after [timeoutMs]. */
+    private fun waitForSavedMessage(text: String, timeoutMs: Long = 20_000): org.json.JSONObject? {
+        val end = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < end) {
+            val result = Api.request("GET", "messages/sync.php", mapOf("with" to friendUid, "since" to 0))
+            val messages = result.json?.optJSONArray("messages")
+            if (result.ok && messages != null) {
+                (0 until messages.length()).map { messages.getJSONObject(it) }
+                    .lastOrNull { it.optString("text") == text }
+                    ?.let { return it }
+            }
+            Thread.sleep(500)
+        }
+        return null
+    }
+
+    /** Starts each test signed out, without needing the server. */
+    private fun signOutLocally() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            Session.clear()
+            LocalDb.clearAll()
+        }
     }
 
     /** Polls until a view matching [matcher] is on screen (network-backed screens load asynchronously). */

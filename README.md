@@ -1,52 +1,72 @@
 # Kinnect
 
-CS 4039 Software for Mobile Devices — Assignment 2. The Kinnect social app (Assignment 1 UI)
-connected to Firebase Authentication, Realtime Database and Cloud Messaging, with Agora voice
-and video calls.
+CS 4039 Software for Mobile Devices. The Kinnect social app talks to its own PHP + MySQL web
+services (in `backend/`). Agora carries voice and video calls, and Firebase Cloud Messaging
+delivers push notifications. The app caches what it loads in SQLite and queues actions made
+offline, sending them once the network is back.
 
 ## Setup
 
-These files hold keys and are **not** in the repository. Every team member adds their own copy.
+The files below hold keys or machine-specific addresses. They are **not** in the repository, so every team member adds their own copy.
 
-1. **Firebase config.** In the Firebase console open the project, add an Android app with package
-   `com.kinnect.i230577_i230839`, download `google-services.json` and put it in `app/`.
-2. **Authentication.** Firebase console → Authentication → Sign-in method → enable **Email/Password**.
-3. **Realtime Database.** Create a database, then open **Rules** and paste the contents of
-   [`database.rules.json`](database.rules.json). Search, Marketplace and the feed need the indexes in it.
-4. **Agora.** Copy `agora.properties.example` to `agora.properties` in the project root and paste
-   the App ID of an Agora project created in *Testing mode* (App ID only, no certificate).
-5. **Push notifications.** Messages and calls are pushed by the Cloud Functions in `functions/`.
-   They need the Blaze plan (the free quota covers a demo):
+1. **Backend (XAMPP).** Copy (or symlink) the `backend/` folder to `C:\xampp\htdocs\kinnect`, start
+   Apache and MySQL, then import the schema once:
    ```
-   npm install -g firebase-tools
-   firebase login
-   firebase use <project-id>
-   cd functions && npm install && cd ..
-   firebase deploy --only functions,database
+   mysql -u root < backend/schema.sql
    ```
+   If your MySQL user or password differs from XAMPP's defaults, copy `backend/config.local.example.php`
+   to `backend/config.local.php` and fill it in.
+2. **Server address.** Copy `server.properties.example` to `server.properties` in the project root
+   and set `api.base` to your laptop's Wi-Fi address (from `ipconfig`), e.g.
+   `api.base=http://192.168.18.82/kinnect/`. The phone and the laptop must be on the same network.
+3. **Agora.** Copy `agora.properties.example` to `agora.properties` and paste the App ID of an Agora
+   project created in *Testing mode* (App ID only, no certificate).
+4. **Push notifications (optional).** In the Firebase console add an Android app with package
+   `com.kinnect.i230577_i230839`, download `google-services.json` into `app/`, then create a
+   service-account key (Project settings → Service accounts → Generate new private key) and save it
+   as `backend/fcm-service-account.json`. Without that file the backend skips pushes silently. Everything
+   else still works while the app is open, because the app polls the server.
 
 Then open the project in Android Studio and run the `app` configuration.
 
-## Database layout
+## Web services
 
-| Path | Contents |
+Every endpoint returns JSON (`{ ok: true, … }` or `{ ok: false, error }`). Apart from sign-up and
+log-in, each request carries the session token as `Authorization: Bearer <token>`.
+
+| Folder | What it does |
 |---|---|
-| `users/{uid}` | Profile: names, username, bio, photos (Base64), `online`, `lastSeen` |
-| `usernames/{username}` | Owner uid, keeps usernames unique (`.` stored as `,`) |
-| `friendRequests/{to}/{from}`, `sentRequests/{from}/{to}`, `friends/{a}/{b}` | Friend system |
-| `posts/{id}`, `postImages/{id}/{n}`, `comments/{postId}/{id}` | Feed, reactions, comments |
-| `stories/{owner}/{id}`, `storyMedia/{id}`, `closeFriends/{uid}` | Stories (24 hours) |
-| `chats/{chatId}/messages/{id}`, `userChats/{uid}/{other}` | Messaging and the Chats list |
-| `callSessions/{id}`, `calls/{uid}`, `callLogs/{uid}/{id}` | Agora calls |
-| `notifications/{uid}/{id}`, `fcmTokens/{uid}` | Notifications tab and push |
-| `marketplace/{id}`, `recentSearches/{uid}` | Marketplace listings, Search history |
+| `api/auth/` | Sign up, log in, log out, current user |
+| `api/users/` | Profiles, profile and cover photos, search, suggestions, online status |
+| `api/friends/` | Add friend → Requested → Friends, friend lists |
+| `api/posts/`, `api/comments/` | Feed, photo posts, reactions, shares, comments and replies |
+| `api/stories/` | 24-hour stories, close friends, views and reactions |
+| `api/chats/`, `api/messages/` | Chats list, messages (text, photo, video, file, shared post), 5-minute edit/delete rule, sync |
+| `api/calls/` | Start, answer, decline and end calls; the incoming-call check; call history (`logs.php`) |
+| `api/listings/` | Marketplace: list, sell (with photo), remove your own listing |
+| `api/notifications/`, `api/badges.php` | Notifications tab and the red badge counts |
+| `api/fcm/` | Saves the device's push token |
 
-Photos are stored as small Base64 JPEGs inside the Realtime Database, so no Storage bucket is needed.
+Uploaded media is stored under `backend/uploads/` and served by URL; the tables store only paths.
+
+### Calls
+
+Calls are signalled through the `calls` table; the audio and video go through Agora, and the
+channel name is the call id. While the app is open, it checks `calls/incoming.php` every few seconds
+and shows the incoming-call screen. When the app is closed, the backend sends an FCM push instead. Both call screens
+poll `calls/get.php` to follow *ringing → accepted → ended*. A call that rings for 40 seconds becomes
+*missed*. The server records when each call was answered and ended, so `calls/logs.php` returns the
+history with durations.
 
 ## Tests
 
-`app/src/androidTest/.../BackendFlowTest.kt` has two Espresso tests that run against the real
-Firebase project (log in → log out clears the back stack; a sent chat message appears and is saved).
-They need one test account with a finished profile and one friend, passed as instrumentation arguments
-`testEmail`, `testPassword` and `testFriendUid` (Android Studio: Run → Edit Configurations →
-Instrumentation arguments). Run them on a device or emulator with internet access.
+`app/src/androidTest/.../BackendFlowTest.kt` has two Espresso tests that run against your PHP
+backend (`api.base` in `server.properties`):
+
+- Logging in and then logging out leaves an empty back stack.
+- A message sent in a chat appears in the thread and is saved on the server.
+
+They need one test account with a finished profile and one friend. Pass them as the instrumentation
+arguments `testEmail`, `testPassword` and `testFriendUid` (the friend's numeric user id). In Android Studio
+that's Run → Edit Configurations → Instrumentation arguments. Run the tests on a device or emulator that can
+reach the backend; without the arguments they are skipped.
