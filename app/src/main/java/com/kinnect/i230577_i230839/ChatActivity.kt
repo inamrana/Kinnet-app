@@ -11,20 +11,26 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doAfterTextChanged
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.Query
-import com.google.firebase.database.ServerValue
+import android.content.Intent
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import androidx.core.content.FileProvider
+import java.io.File
+import java.util.concurrent.Executors
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * 21 · Chat — a live one-to-one conversation stored in chats/{chatId}/messages.
+ * 21 · Chat — a one-to-one conversation through the messaging web services.
  *
- * Send text, photos or shared posts, reply to a message, heart a message, and edit / delete your own
- * messages for 5 minutes after sending (long press). The header shows "Active now" live.
+ * Messages are read from SQLite first (so the chat opens instantly and offline) and the screen polls
+ * messages/sync.php every few seconds, so new messages, edits, deletions and hearts appear without
+ * leaving it. Send text, photos, videos, files or shared posts, reply to a message, heart a message,
+ * and edit / delete your own messages for 5 minutes after sending (long press; the server enforces
+ * the 5 minutes too). Anything sent offline shows "Sending…" and is delivered when the connection
+ * returns. The header shows "Active now" live.
  * The phone and video icons start a call. Taking a screenshot posts "<name> took a screenshot"
  * in the chat and notifies the other person.
  */
@@ -32,37 +38,30 @@ class ChatActivity : BaseActivity() {
 
     private val otherUid by lazy { intent.getStringExtra(EXTRA_UID).orEmpty() }
     private val me by lazy { Db.uid.orEmpty() }
-    private val chatId by lazy { Db.chatId(me, otherUid) }
 
     private lateinit var input: EditText
     private lateinit var list: LinearLayout
     private lateinit var scroll: ScrollView
     private lateinit var sendButton: ImageView
 
-    private val watch = Watch()
+    private var chatWatch: Watch? = null
     private var other = User()
     private val messages = linkedMapOf<String, Message>()
     private val views = hashMapOf<String, View>()
-    private var messagesQuery: Query? = null
     private var replyTo: Message? = null
+    private val worker = Executors.newSingleThreadExecutor()
+    private val handler = Handler(Looper.getMainLooper())
+    private val poll = object : Runnable {
+        override fun run() {
+            ChatSender.sync(otherUid) { fresh -> fresh?.let(::showOther) }
+            handler.postDelayed(this, POLL_MS)
+        }
+    }
     private val screenshots by lazy { ScreenshotDetector(this) { onScreenshot() } }
     private val askGalleryAccess = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
     ) { }
     private var editing: Message? = null
-
-    private val messageListener = object : ChildEventListener {
-        override fun onChildAdded(snapshot: DataSnapshot, previous: String?) = upsert(snapshot)
-        override fun onChildChanged(snapshot: DataSnapshot, previous: String?) = upsert(snapshot)
-        override fun onChildRemoved(snapshot: DataSnapshot) {
-            val id = snapshot.key ?: return
-            messages.remove(id)
-            views.remove(id)?.let(list::removeView)
-            refreshGrouping()
-        }
-        override fun onChildMoved(snapshot: DataSnapshot, previous: String?) = Unit
-        override fun onCancelled(error: DatabaseError) = Unit
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +79,8 @@ class ChatActivity : BaseActivity() {
         onTap(R.id.btn_info) { PersonRow.openProfile(list, otherUid) }
         onTap(R.id.chat_header_avatar) { PersonRow.openProfile(list, otherUid) }
         onTap(R.id.reply_cancel) { clearComposerMode() }
-        onTap(R.id.btn_send_image) { pickImage { sendMessage(Message.TYPE_IMAGE, image = it) } }
+        onTap(R.id.btn_send_image) { pickImageUri("image/*") { sendAttachment(Message.TYPE_IMAGE, it) } }
+        onTap(R.id.btn_attach) { chooseAttachment() }
         onTap(R.id.btn_send) { onSendTapped() }
         input.doAfterTextChanged { updateSendIcon() }
         UserCache.get(me) { }
@@ -90,13 +90,12 @@ class ChatActivity : BaseActivity() {
         ) askGalleryAccess.launch(Gallery.permissions())
         findViewById<View>(R.id.chat_intro_date).visibility = View.GONE
 
-        watch.on(Db.user(otherUid)) { snapshot -> snapshot.getValue(User::class.java)?.let(::showOther) }
-        watch.on(Db.friends.child(me).child(otherUid)) { snapshot ->
-            findViewById<TextView>(R.id.chat_intro_info).text =
-                if (snapshot.exists()) "You're friends on Kinnect" else "You're not friends on Kinnect"
-        }
-        messagesQuery = Db.messages(chatId).orderByChild("timestamp").limitToLast(MAX_MESSAGES)
-            .also { it.addChildEventListener(messageListener) }
+        LocalDb.user(otherUid)?.let(::showOther)
+        Users.load(otherUid) { showOther(it) }
+        findViewById<TextView>(R.id.chat_intro_info).text =
+            if (Friends.state(otherUid) == FriendState.FRIENDS) "You're friends on Kinnect" else "You're not friends on Kinnect"
+        chatWatch = ChatSender.watch { uid -> if (uid == otherUid) render() }
+        render()
     }
 
     override fun onStart() {
@@ -111,18 +110,19 @@ class ChatActivity : BaseActivity() {
 
     /** Lets the other person know, as in the design's "Aisha took a screenshot". */
     private fun onScreenshot() {
-        val name = UserCache.peek(me)?.firstName?.ifEmpty { null } ?: "Someone"
-        val text = "$name took a screenshot"
-        ChatSender.send(otherUid, Message.TYPE_SYSTEM, text = text, preview = text)
+        val name = (UserCache.peek(me) ?: LocalDb.user(me))?.firstName?.ifEmpty { null } ?: "Someone"
+        ChatSender.send(otherUid, Message.TYPE_SYSTEM, text = "$name took a screenshot")
     }
 
     override fun onResume() {
         super.onResume()
         Push.openChatUid = otherUid
+        handler.post(poll)
         markRead()
     }
 
     override fun onPause() {
+        handler.removeCallbacks(poll)
         if (Push.openChatUid == otherUid) Push.openChatUid = null
         super.onPause()
     }
@@ -142,23 +142,25 @@ class ChatActivity : BaseActivity() {
 
     // ---- messages -----------------------------------------------------------------------
 
-    private fun upsert(snapshot: DataSnapshot) {
-        val message = snapshot.getValue(Message::class.java)?.copy(id = snapshot.key.orEmpty()) ?: return
-        val isNew = message.id !in messages
-        messages[message.id] = message
-        val view = inflateMessage(message)
-        val old = views.put(message.id, view)
-        if (old == null) {
-            list.addView(view)
-        } else {
-            list.addView(view, list.indexOfChild(old))
-            list.removeView(old)
+    /** Rebuilds the thread from SQLite; only bubbles that changed are inflated again. */
+    private fun render() {
+        val latest = ChatSender.cached(otherUid).takeLast(MAX_MESSAGES)
+        val hadNewIncoming = latest.any { it.id !in messages && it.senderId != me }
+        val grew = latest.size > messages.size
+        val previous = HashMap(messages)
+        messages.clear()
+        latest.forEach { messages[it.id] = it }
+        views.keys.retainAll(messages.keys)
+        list.removeAllViews()
+        latest.forEach { message ->
+            val view = if (previous[message.id] == message) views[message.id] else null
+            val bubble = view ?: inflateMessage(message).also { views[message.id] = it }
+            (bubble.parent as? ViewGroup)?.removeView(bubble)
+            list.addView(bubble)
         }
         refreshGrouping()
-        if (isNew) {
-            scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
-            if (message.senderId != me) markRead()
-        }
+        if (grew) scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+        if (hadNewIncoming) markRead()
     }
 
     private fun inflateMessage(message: Message): View {
@@ -166,6 +168,11 @@ class ChatActivity : BaseActivity() {
         if (message.type == Message.TYPE_SYSTEM) {
             return inflater.inflate(R.layout.item_message_system, list, false).also {
                 (it as TextView).text = message.text
+            }
+        }
+        if (message.deleted) {
+            return inflater.inflate(R.layout.item_message_system, list, false).also {
+                (it as TextView).text = if (message.senderId == me) "You deleted a message" else "Message deleted"
             }
         }
         val mine = message.senderId == me
@@ -177,7 +184,16 @@ class ChatActivity : BaseActivity() {
             Message.TYPE_IMAGE -> {
                 text.visibility = View.GONE
                 imageCard.visibility = View.VISIBLE
-                Images.show(view.findViewById(R.id.msg_image), message.image)
+                Images.show(view.findViewById(R.id.msg_image), message.media)
+                imageCard.setOnClickListener { openMedia(message, "image/*") }
+            }
+            Message.TYPE_VIDEO -> {
+                text.text = "🎬  Video · tap to play"
+                text.setOnClickListener { openMedia(message, "video/*") }
+            }
+            Message.TYPE_FILE -> {
+                text.text = "📎  ${message.fileName.ifEmpty { "File" }} · tap to open"
+                text.setOnClickListener { openMedia(message, "*/*") }
             }
             Message.TYPE_POST -> {
                 text.visibility = View.GONE
@@ -209,7 +225,11 @@ class ChatActivity : BaseActivity() {
             }
             (bubble.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = dp(12)
         }
-        view.findViewById<View>(R.id.msg_edited).visibility = if (message.edited) View.VISIBLE else View.GONE
+        // "Sending…" while queued offline, "Edited" once changed
+        view.findViewById<TextView>(R.id.msg_edited).apply {
+            visibility = if (message.pending || message.edited) View.VISIBLE else View.GONE
+            this.text = if (message.pending) "Sending…" else "Edited"
+        }
 
         val body = view.findViewById<View>(R.id.msg_body)
         body.setOnLongClickListener { showOptions(message); true }
@@ -222,13 +242,12 @@ class ChatActivity : BaseActivity() {
     /** Fills the shared-post card and opens the post's comments when tapped. */
     private fun bindSharedPost(card: View, postId: String) {
         card.setOnClickListener { PostCard.openComments(this, postId) }
-        Db.posts.child(postId).get().addOnSuccessListener { snapshot ->
-            val post = snapshot.getValue(Post::class.java)
+        Posts.load(postId) { post ->
             val text = card.findViewById<TextView>(R.id.shared_post_text)
             if (post == null) {
                 text.text = "This post is no longer available"
                 card.setOnClickListener(null)
-                return@addOnSuccessListener
+                return@load
             }
             text.text = post.text.ifEmpty { "Photo" }
             UserCache.get(post.authorId) { author ->
@@ -237,9 +256,7 @@ class ChatActivity : BaseActivity() {
             }
             if (post.imageCount > 0) {
                 card.findViewById<View>(R.id.shared_post_image_card).visibility = View.VISIBLE
-                PostImages.get(postId) { images ->
-                    images.firstOrNull()?.let { Images.show(card.findViewById(R.id.shared_post_image), it) }
-                }
+                post.images.firstOrNull()?.let { Images.show(card.findViewById(R.id.shared_post_image), it) }
             }
         }
     }
@@ -263,7 +280,7 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun showOptions(message: Message) {
-        if (message.type == Message.TYPE_SYSTEM) return
+        if (message.type == Message.TYPE_SYSTEM || message.deleted) return
         val mine = message.senderId == me
         val canChange = mine && System.currentTimeMillis() - message.timestamp < Message.EDIT_WINDOW_MS
         val hearted = message.hearts.containsKey(me)
@@ -279,18 +296,14 @@ class ChatActivity : BaseActivity() {
             .show()
     }
 
-    private fun toggleHeart(message: Message, hearted: Boolean) {
-        val ref = Db.messages(chatId).child(message.id).child("hearts").child(me)
-        if (hearted) ref.removeValue() else ref.setValue(true)
-    }
+    private fun toggleHeart(message: Message, hearted: Boolean) = ChatSender.heart(otherUid, message, !hearted)
 
     private fun deleteMessage(message: Message) {
         if (System.currentTimeMillis() - message.timestamp >= Message.EDIT_WINDOW_MS) {
             toast("Messages can only be deleted within 5 minutes")
             return
         }
-        Db.messages(chatId).child(message.id).removeValue()
-        if (messages.keys.lastOrNull() == message.id) updateSummaries("Message deleted", bumpUnread = false)
+        ChatSender.delete(otherUid, message)
     }
 
     // ---- composer -----------------------------------------------------------------------
@@ -341,42 +354,54 @@ class ChatActivity : BaseActivity() {
         if (System.currentTimeMillis() - message.timestamp >= Message.EDIT_WINDOW_MS) {
             toast("Messages can only be edited within 5 minutes")
         } else {
-            Db.messages(chatId).child(message.id).updateChildren(mapOf("text" to text, "edited" to true))
-            if (messages.keys.lastOrNull() == message.id) updateSummaries(text, bumpUnread = false)
+            ChatSender.edit(otherUid, message, text)
         }
         input.setText("")
         clearComposerMode()
     }
 
-    private fun sendMessage(type: String, text: String = "", image: String = "") {
-        val ref = Db.messages(chatId).push()
-        val data = mutableMapOf<String, Any>(
-            "senderId" to me,
-            "type" to type,
-            "text" to text,
-            "image" to image,
-            "timestamp" to ServerValue.TIMESTAMP,
-        )
-        replyTo?.let {
-            data["replyToId"] = it.id
-            data["replyToText"] = previewOf(it)
-            data["replyToSender"] = it.senderId
-        }
-        ref.setValue(data)
-        updateSummaries(if (type == Message.TYPE_IMAGE) "Sent a photo" else text, bumpUnread = true)
+    private fun sendMessage(type: String, text: String = "", file: File? = null, fileName: String = "") {
+        ChatSender.send(otherUid, type, text = text, file = file, fileName = fileName, replyTo = replyTo)
         input.setText("")
         clearComposerMode()
     }
 
-    /** Keeps both people's Chats list rows (last message, time, unread count) up to date. */
-    private fun updateSummaries(preview: String, bumpUnread: Boolean) {
-        Db.update(ChatSender.summaries(me, otherUid, preview, bumpUnread))
+    /** "+" offers a video or any file; the camera-roll icon sends a photo. */
+    private fun chooseAttachment() {
+        AlertDialog.Builder(this)
+            .setItems(arrayOf("Video", "File")) { _, which ->
+                if (which == 0) pickImageUri("video/*") { sendAttachment(Message.TYPE_VIDEO, it) }
+                else pickImageUri("*/*") { sendAttachment(Message.TYPE_FILE, it) }
+            }
+            .show()
+    }
+
+    /** Copies the chosen item into the outbox off the main thread, then sends it (queued if offline). */
+    private fun sendAttachment(type: String, uri: Uri) {
+        worker.execute {
+            val file = if (type == Message.TYPE_IMAGE) Outbox.photo(this, uri) else Outbox.copy(this, uri)
+            val name = if (type == Message.TYPE_FILE) Outbox.displayName(this, uri) else ""
+            runOnUiThread {
+                if (file == null) toast(if (type == Message.TYPE_IMAGE) "Could not read that photo" else "That file is too large (max 38 MB)")
+                else sendMessage(type, file = file, fileName = name)
+            }
+        }
+    }
+
+    /** Opens a photo, video or file with the phone's own viewer (from the server, or the outbox while sending). */
+    private fun openMedia(message: Message, mime: String) {
+        val source = message.media.ifEmpty { return }
+        val uri = if (Images.isLocalFile(source)) FileProvider.getUriForFile(this, "$packageName.files", File(source)) else Uri.parse(source)
+        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        runCatching { startActivity(intent) }.onFailure {
+            runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }.onFailure { toast("No app can open this") }
+        }
     }
 
     private fun markRead() {
         // Only once there is a conversation, so opening an empty chat leaves no row behind in Chats
-        if (me.isEmpty() || otherUid.isEmpty() || messages.isEmpty()) return
-        Db.userChats.child(me).child(otherUid).child("unread").setValue(0)
+        if (otherUid.isEmpty() || messages.isEmpty()) return
+        ChatSender.markRead(otherUid)
     }
 
     private fun updateSendIcon() {
@@ -387,11 +412,7 @@ class ChatActivity : BaseActivity() {
 
     // ---- text helpers -------------------------------------------------------------------
 
-    private fun previewOf(message: Message) = when (message.type) {
-        Message.TYPE_IMAGE -> "Photo"
-        Message.TYPE_POST -> "Shared a post"
-        else -> message.text
-    }
+    private fun previewOf(message: Message) = ChatSender.previewOf(message)
 
     private fun replyLabel(message: Message): String {
         val otherName = other.firstName.ifEmpty { other.fullName }
@@ -406,14 +427,15 @@ class ChatActivity : BaseActivity() {
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() {
-        watch.stop()
-        messagesQuery?.removeEventListener(messageListener)
+        handler.removeCallbacks(poll)
+        chatWatch?.stop()
         super.onDestroy()
     }
 
     companion object {
         const val EXTRA_UID = "uid"
         private const val MAX_MESSAGES = 200
+        private const val POLL_MS = 2_500L
 
         /** "Active now", "Active 5m ago" or "Offline" — used by the chat header. */
         fun presenceText(user: User): String = when {

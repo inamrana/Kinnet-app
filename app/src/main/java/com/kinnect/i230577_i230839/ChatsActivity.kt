@@ -10,15 +10,22 @@ import android.widget.TextView
 import androidx.core.widget.doAfterTextChanged
 
 /**
- * 20 · Chats — real conversations from userChats/{uid}, newest first, with the last message,
- * its time and an unread dot. Green dots (and the rail of active friends) follow presence live.
+ * 20 · Chats — real conversations from chats/list.php, newest first, with the last message, its time
+ * and an unread dot. The list is cached in SQLite (works offline) and refreshed every few seconds;
+ * green dots (and the rail of active friends) come from users/statuses.php.
  *
  * Opened with [EXTRA_SHARE_POST] it becomes "Send to": tapping a person sends them the post.
  */
 class ChatsActivity : BaseActivity() {
 
-    private val watch = Watch()
-    private val userWatches = hashMapOf<String, Watch>()
+    private var chatWatch: Watch? = null
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val poll = object : Runnable {
+        override fun run() {
+            refresh()
+            handler.postDelayed(this, POLL_MS)
+        }
+    }
     private val people = hashMapOf<String, User>()
     private var summaries = listOf<ChatSummary>()
     private var friendIds = listOf<String>()
@@ -42,30 +49,54 @@ class ChatsActivity : BaseActivity() {
             search.hint = "Search friends"
         }
 
-        val me = Db.uid ?: return
-        watch.on(Db.userChats.child(me)) { snapshot ->
-            summaries = snapshot.children.mapNotNull { child ->
-                child.getValue(ChatSummary::class.java)?.copy(otherUid = child.key.orEmpty())
-            }.filter { it.lastTime > 0 } // a chat opened but never used has no messages yet
-                .sortedByDescending { it.lastTime }
-            summaries.forEach { watchUser(it.otherUid) }
+        if (Session.uid == null) return
+        LocalDb.cache("chats")?.let { parse(org.json.JSONObject(it)) }
+        loadFriends()
+        showChats()
+        showActive()
+        chatWatch = ChatSender.watch { refresh() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler.post(poll)
+    }
+
+    override fun onPause() {
+        handler.removeCallbacks(poll)
+        super.onPause()
+    }
+
+    private fun loadFriends() {
+        friendIds = LocalDb.links("friends").map { it.userId }
+        friendIds.forEach { id -> LocalDb.user(id)?.let { people[id] = it } }
+    }
+
+    /** Conversations from the server (cached for offline), then fresh online dots for everyone shown. */
+    private fun refresh() {
+        Api.get("chats/list.php") { result ->
+            val json = result.json?.takeIf { result.ok } ?: return@get
+            LocalDb.putCache("chats", json.toString())
+            parse(json)
             showChats()
         }
-        watch.on(Db.friends.child(me)) { snapshot ->
-            friendIds = snapshot.children.mapNotNull { it.key }
-            friendIds.forEach(::watchUser)
+        Friends.refresh { loadFriends(); showActive(); if (sharing) showChats() }
+        Presence.statuses(people.keys) { statuses ->
+            statuses.forEach { (id, status) -> people[id]?.let { people[id] = it.copy(online = status.first, lastSeen = status.second) } }
+            showChats()
             showActive()
-            if (sharing) showChats()
         }
     }
 
-    /** One live listener per person, so names, photos and online dots stay current. */
-    private fun watchUser(uid: String) {
-        if (uid in userWatches) return
-        userWatches[uid] = Watch().on(Db.user(uid)) { snapshot ->
-            snapshot.getValue(User::class.java)?.let { people[uid] = it }
-            showChats()
-            showActive()
+    private fun parse(json: org.json.JSONObject) {
+        summaries = json.optJSONArray("chats").mapObjects { row ->
+            val user = row.getJSONObject("user").toUser()
+            people[user.uid] = user
+            LocalDb.putUser(user)
+            ChatSummary(
+                otherUid = row.optString("otherUid"), lastMessage = row.optString("lastMessage"),
+                lastTime = row.optLong("lastTime"), unread = row.optInt("unread"),
+            )
         }
     }
 
@@ -117,8 +148,8 @@ class ChatsActivity : BaseActivity() {
 
     /** Sends the post as a message and counts the share on the post. */
     private fun sharePost(user: User) {
-        ChatSender.send(user.uid, Message.TYPE_POST, postId = sharePostId, preview = "Shared a post")
-        Db.posts.child(sharePostId).child("shareCount").setValue(com.google.firebase.database.ServerValue.increment(1))
+        // The server counts the share when it receives the shared-post message
+        ChatSender.send(user.uid, Message.TYPE_POST, postId = sharePostId)
         toast("Sent to ${user.firstName.ifEmpty { user.fullName }}")
         finish()
     }
@@ -128,13 +159,14 @@ class ChatsActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        watch.stop()
-        userWatches.values.forEach(Watch::stop)
+        handler.removeCallbacks(poll)
+        chatWatch?.stop()
         super.onDestroy()
     }
 
     companion object {
         /** Opens the list in "send this post" mode: tapping a chat shares the post there. */
         const val EXTRA_SHARE_POST = "sharePostId"
+        private const val POLL_MS = 5_000L
     }
 }

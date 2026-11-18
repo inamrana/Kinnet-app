@@ -229,8 +229,9 @@
         android:paddingEnd="8dp">
 
         <ImageView
+            android:id="@+id/btn_attach"
             style="@style/Icon.Touch"
-            android:contentDescription="More"
+            android:contentDescription="Send a video or file"
             android:src="@drawable/ic_plus_circle"
             android:tint="@color/teal" />
 
