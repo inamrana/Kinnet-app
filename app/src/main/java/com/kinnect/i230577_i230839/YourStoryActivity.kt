@@ -14,14 +14,14 @@ import androidx.appcompat.app.AlertDialog
  */
 class YourStoryActivity : BaseActivity() {
 
-    private val watch = Watch()
+    private var storiesWatch: Watch? = null
     private lateinit var player: StoryPlayer
     private var started = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_your_story)
-        val me = Db.uid ?: run { finish(); return }
+        val me = Session.uid ?: run { finish(); return }
 
         player = StoryPlayer(this, onShow = { _, story -> showMeta(story) }, onFinished = { finish() })
         tapCloses(R.id.btn_close)
@@ -35,19 +35,22 @@ class YourStoryActivity : BaseActivity() {
             Avatars.show(findViewById(R.id.story_owner_avatar), user)
         }
         findViewById<TextView>(R.id.story_owner_name).text = "Your story"
-        watch.on(Db.stories.child(me)) { snapshot ->
-            val all = snapshot.children.mapNotNull { it.getValue(Story::class.java)?.copy(id = it.key.orEmpty(), ownerId = me) }
-            Stories.deleteExpired(all)
-            val live = all.filter { it.isLive }.sortedBy { it.timestamp }
-            // Open on your newest story the first time
-            player.setStories(live, if (!started && live.isNotEmpty()) live.lastIndex.also { started = true } else -1)
-            player.current?.let(::showMeta)
-        }
+        storiesWatch = Stories.watch { show(me) }
+        show(me)
+        Stories.refresh { ok -> if (ok) show(me) }
+    }
+
+    private fun show(me: String) {
+        val live = Stories.cachedFor(me).sortedBy { it.timestamp }
+        // Open on your newest story the first time
+        player.setStories(live, if (!started && live.isNotEmpty()) live.lastIndex.also { started = true } else -1)
+        player.current?.let(::showMeta)
     }
 
     private fun showMeta(story: Story) {
         val close = story.audience == Story.AUDIENCE_CLOSE
-        findViewById<TextView>(R.id.story_meta).text = "${TimeAgo.short(story.timestamp)} · ${if (close) "Close friends" else "Friends"}"
+        findViewById<TextView>(R.id.story_meta).text =
+            "${if (story.pending) "Sending…" else TimeAgo.short(story.timestamp)} · ${if (close) "Close friends" else "Friends"}"
         findViewById<View>(R.id.story_globe).visibility = View.GONE
 
         val viewers = story.viewers.entries.sortedByDescending { it.value }.map { it.key }
@@ -115,7 +118,7 @@ class YourStoryActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        watch.stop()
+        storiesWatch?.stop()
         if (::player.isInitialized) player.stop()
         super.onDestroy()
     }

@@ -7,10 +7,9 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 
-/** Close friends — tick the friends who can see your "Close friends" stories (closeFriends/{uid}). */
+/** Close friends — tick the friends who can see your "Close friends" stories (stories/close_friends.php). */
 class CloseFriendsActivity : BaseActivity() {
 
-    private val watch = Watch()
     private var chosen = setOf<String>()
     private var friends = listOf<String>()
     private lateinit var list: LinearLayout
@@ -20,28 +19,25 @@ class CloseFriendsActivity : BaseActivity() {
         setContentView(R.layout.activity_close_friends)
         list = findViewById(R.id.close_friends_list)
         tapCloses(R.id.btn_back)
+        if (Session.uid == null) { finish(); return }
 
-        val me = Db.uid ?: run { finish(); return }
-        watch.on(Db.friends.child(me)) { snapshot ->
-            friends = snapshot.children.mapNotNull { it.key }
-            show()
-        }
-        watch.on(Db.closeFriends.child(me)) { snapshot ->
-            chosen = snapshot.children.mapNotNull { it.key }.toSet()
-            show()
-        }
+        friends = LocalDb.links("friends").map { it.userId }
+        show()
+        Friends.refresh { friends = LocalDb.links("friends").map { it.userId }; show() }
+        Stories.closeFriends { chosen = it; show() }
     }
 
     private fun show() {
-        val me = Db.uid ?: return
         list.removeAllViews()
         friends.forEach { uid ->
             val row = LayoutInflater.from(this).inflate(R.layout.item_close_friend, list, false)
             val check = row.findViewById<CheckBox>(R.id.close_check)
             check.isChecked = uid in chosen
             row.setOnClickListener {
-                val ref = Db.closeFriends.child(me).child(uid)
-                if (uid in chosen) ref.removeValue() else ref.setValue(true)
+                // Tick straight away; the server's list replaces it when it answers
+                chosen = if (uid in chosen) chosen - uid else chosen + uid
+                show()
+                Stories.setCloseFriend(uid, uid in chosen) { chosen = it; show() }
             }
             UserCache.get(uid) { user ->
                 Avatars.show(row.findViewById(R.id.close_avatar), user)
@@ -53,10 +49,5 @@ class CloseFriendsActivity : BaseActivity() {
         findViewById<View>(R.id.close_friends_empty).visibility = if (friends.isEmpty()) View.VISIBLE else View.GONE
         findViewById<TextView>(R.id.close_friends_count).text =
             if (chosen.isEmpty()) "" else "${chosen.count { it in friends }} chosen"
-    }
-
-    override fun onDestroy() {
-        watch.stop()
-        super.onDestroy()
     }
 }

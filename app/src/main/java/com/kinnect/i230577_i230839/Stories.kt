@@ -1,25 +1,26 @@
 package com.kinnect.i230577_i230839
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.util.Base64
-import com.google.firebase.database.ServerValue
-import java.io.ByteArrayOutputStream
+import org.json.JSONObject
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 /**
- * A story under stories/{ownerUid}/{storyId}. The photo or video itself is in storyMedia/{storyId};
- * [thumb] is a small preview for the Home rail. Stories disappear 24 hours after [timestamp].
+ * A story from stories/feed.php. The photo or video is a file on the server ([media]); [thumb] is
+ * a small preview for the Home rail. Stories disappear 24 hours after [timestamp]: the server stops
+ * returning them and they are removed from the SQLite cache too.
  */
 data class Story(
     val id: String = "",
     val ownerId: String = "",
     val type: String = TYPE_IMAGE,
+    val media: String = "",
     val thumb: String = "",
     val label: String = "",
     val labelStyle: String = LABEL_RED,
@@ -29,6 +30,7 @@ data class Story(
     val timestamp: Long = 0L,
     val viewers: Map<String, Long> = emptyMap(),
     val reactions: Map<String, String> = emptyMap(),
+    val pending: Boolean = false,
 ) {
     val isVideo get() = type == TYPE_VIDEO
     val isLive get() = System.currentTimeMillis() - timestamp < Stories.LIFETIME_MS
@@ -43,16 +45,66 @@ data class Story(
     }
 }
 
-/** Sharing, viewing and expiring stories. */
+/** Sharing, viewing and expiring stories through the web services, cached in SQLite. */
 object Stories {
 
     const val LIFETIME_MS = 24 * 60 * 60 * 1000L
-    // Base64 adds a third, so 7 MB stays under the database's 10 MB limit for one value
-    private const val MAX_VIDEO_BYTES = 7 * 1024 * 1024
+    private const val MAX_VIDEO_BYTES = 38L * 1024 * 1024
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
+    private val listeners = mutableSetOf<() -> Unit>()
 
-    /** Encodes the media off the main thread and saves the story. [done] gets an error message or null. */
+    init {
+        Sync.addListener { done ->
+            when (done.type) {
+                "story" -> {
+                    LocalDb.deleteItem("stories", Sync.localId(done.clientId))
+                    done.response?.optJSONObject("story")?.let(::store)
+                }
+                "storydelete" -> Unit
+                else -> return@addListener
+            }
+            changed()
+        }
+    }
+
+    // ---- reading ----------------------------------------------------------------------------
+
+    /** Live stories from the cache (mine and friends'), oldest first. Expired ones are deleted first. */
+    fun cached(): List<Story> {
+        LocalDb.deleteOlderThan("stories", System.currentTimeMillis() - LIFETIME_MS)
+        return LocalDb.items("stories").map { it.toStory() }.filter { it.isLive }
+    }
+
+    fun cachedFor(owner: String) = cached().filter { it.ownerId == owner }
+
+    fun refresh(done: (Boolean) -> Unit = {}) {
+        Api.get("stories/feed.php") { result ->
+            val json = result.json?.takeIf { result.ok } ?: return@get done(false)
+            LocalDb.replaceItems("stories", null, json.optJSONArray("stories").mapObjects { it.toItem() })
+            Posts.dropSyncedCopies("stories", json.optJSONArray("stories").mapObjects { it })
+            LocalDb.deleteOlderThan("stories", System.currentTimeMillis() - LIFETIME_MS)
+            done(true)
+        }
+    }
+
+    fun watch(onChange: () -> Unit): Watch {
+        listeners += onChange
+        return Watch().onStop { listeners -= onChange }
+    }
+
+    private fun changed() = listeners.toList().forEach { it() }
+
+    /** The stories [viewer] may see right now, oldest first (the server already applies "Close friends"). */
+    fun visible(stories: List<Story>, @Suppress("UNUSED_PARAMETER") viewer: String, @Suppress("UNUSED_PARAMETER") isCloseFriend: Boolean): List<Story> =
+        stories.filter { it.isLive }.sortedBy { it.timestamp }
+
+    // ---- writing ----------------------------------------------------------------------------
+
+    /**
+     * Copies the photo or video into the [Outbox] off the main thread, shows the story at once as
+     * pending and uploads it through [Sync]. [done] gets an error message or null.
+     */
     fun share(
         context: Context,
         media: Uri,
@@ -65,94 +117,48 @@ object Stories {
         done: (String?) -> Unit,
     ) {
         val me = Db.uid ?: return done("Please log in again")
+        val app = context.applicationContext
         worker.execute {
-            val encoded: String?
-            val thumb: String?
-            if (isVideo) {
-                val size = runCatching { context.contentResolver.openAssetFileDescriptor(media, "r")?.use { it.length } }.getOrNull() ?: -1L
-                if (size > MAX_VIDEO_BYTES) {
-                    main.post { done("That video is too long. Try a clip under 15 seconds.") }
-                    return@execute
-                }
-                val bytes = runCatching { context.contentResolver.openInputStream(media)?.use { it.readBytes() } }.getOrNull()
-                if (bytes == null || bytes.size > MAX_VIDEO_BYTES) {
-                    main.post { done(if (bytes == null) "Could not read that video" else "That video is too long. Try a shorter clip.") }
-                    return@execute
-                }
-                encoded = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                thumb = videoThumb(context, media)
-            } else {
-                encoded = Images.encode(context, media, 1080)
-                thumb = Images.encode(context, media, 360)
-            }
-            if (encoded == null) {
-                main.post { done("Could not read that photo") }
-                return@execute
-            }
+            val file = if (isVideo) Outbox.copy(app, media, MAX_VIDEO_BYTES) else Outbox.photo(app, media, 1080)
+            val thumb = if (isVideo) Outbox.videoThumb(app, media) else null
             main.post {
-                val id = Db.stories.child(me).push().key ?: return@post done("Could not share")
-                Db.update(
-                    mapOf(
-                        "stories/$me/$id" to mapOf(
-                            "ownerId" to me,
-                            "type" to if (isVideo) Story.TYPE_VIDEO else Story.TYPE_IMAGE,
-                            "thumb" to (thumb ?: ""),
-                            "label" to label,
-                            "labelStyle" to labelStyle,
-                            "labelX" to labelX,
-                            "labelY" to labelY,
-                            "audience" to audience,
-                            "timestamp" to ServerValue.TIMESTAMP,
-                        ),
-                        "storyMedia/$id" to mapOf("owner" to me, "data" to encoded),
-                    )
-                ).addOnCompleteListener { done(if (it.isSuccessful) null else "Could not share. Check your connection.") }
+                if (file == null) return@post done(if (isVideo) "That video is too long. Try a shorter clip." else "Could not read that photo")
+                val clientId = Sync.newClientId()
+                val local = Story(
+                    id = Sync.localId(clientId), ownerId = me, type = if (isVideo) Story.TYPE_VIDEO else Story.TYPE_IMAGE,
+                    media = file.absolutePath, thumb = if (isVideo) thumb?.absolutePath.orEmpty() else file.absolutePath,
+                    label = label, labelStyle = labelStyle, labelX = labelX, labelY = labelY, audience = audience,
+                    timestamp = System.currentTimeMillis(), pending = true,
+                )
+                LocalDb.putItem("stories", local.id, me, local.timestamp, local.toJson(), pending = true)
+                Sync.enqueue(
+                    "story", "stories/create.php",
+                    mapOf("label" to label, "labelStyle" to labelStyle, "labelX" to labelX, "labelY" to labelY, "audience" to audience),
+                    files = buildMap { put("media", file); thumb?.let { put("thumb", it) } }, clientId = clientId,
+                )
+                changed()
+                done(null)
             }
         }
-    }
-
-    private fun videoThumb(context: Context, uri: Uri): String? = runCatching {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, uri)
-        val frame = retriever.getFrameAtTime(0) ?: return null
-        retriever.release()
-        val scale = 360f / maxOf(frame.width, frame.height)
-        val small = Bitmap.createScaledBitmap(frame, (frame.width * scale).toInt(), (frame.height * scale).toInt(), true)
-        val out = ByteArrayOutputStream()
-        small.compress(Bitmap.CompressFormat.JPEG, 70, out)
-        Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
-    }.getOrNull()
-
-    /** The stories [viewer] may see right now (live, and close-friends ones only if allowed), oldest first. */
-    fun visible(stories: List<Story>, viewer: String, isCloseFriend: Boolean): List<Story> =
-        stories.filter { it.isLive && (it.ownerId == viewer || it.audience != Story.AUDIENCE_CLOSE || isCloseFriend) }
-            .sortedBy { it.timestamp }
-
-    /** Removes your own stories older than 24 hours (and their media). */
-    fun deleteExpired(mine: List<Story>) {
-        val me = Db.uid ?: return
-        val updates = mutableMapOf<String, Any?>()
-        mine.filter { !it.isLive }.forEach {
-            updates["stories/$me/${it.id}"] = null
-            updates["storyMedia/${it.id}"] = null
-        }
-        if (updates.isNotEmpty()) Db.update(updates)
     }
 
     fun delete(story: Story) {
-        Db.update(mapOf("stories/${story.ownerId}/${story.id}" to null, "storyMedia/${story.id}" to null))
+        LocalDb.deleteItem("stories", story.id)
+        Sync.enqueue("storydelete", "stories/delete.php", mapOf("storyId" to Sync.ref(story.id)))
+        changed()
     }
 
     fun markViewed(story: Story) {
         val me = Db.uid ?: return
-        if (story.ownerId == me || story.viewers.containsKey(me)) return
-        Db.stories.child(story.ownerId).child(story.id).child("viewers").child(me).setValue(ServerValue.TIMESTAMP)
+        if (story.ownerId == me || story.viewers.containsKey(me) || story.pending) return
+        val seen = story.copy(viewers = story.viewers + (me to System.currentTimeMillis()))
+        LocalDb.putItem("stories", seen.id, seen.ownerId, seen.timestamp, seen.toJson())
+        Sync.enqueue("storyview", "stories/view.php", mapOf("storyId" to story.id))
     }
 
     /** A quick reaction from the Story viewer: stored on the story and sent to the owner as a message. */
     fun react(story: Story, reaction: Reaction) {
-        val me = Db.uid ?: return
-        Db.stories.child(story.ownerId).child(story.id).child("reactions").child(me).setValue(reaction.key)
+        Sync.enqueue("storyview", "stories/view.php", mapOf("storyId" to Sync.ref(story.id), "reaction" to reaction.key))
         val emoji = when (reaction) {
             Reaction.LOVE -> "❤️"
             Reaction.HAHA -> "😆"
@@ -165,16 +171,75 @@ object Stories {
         ChatSender.send(story.ownerId, Message.TYPE_TEXT, text = "Replied to your story: $text")
     }
 
-    /** Loads a story's photo or video. Videos are written to a cache file so VideoView can play them. */
+    /**
+     * Gets a story's media: a photo source for [Images.show], or for videos a local file VideoView
+     * can play (downloaded once into the cache, so it also plays offline afterwards).
+     */
     fun loadMedia(context: Context, story: Story, done: (image: String?, video: File?) -> Unit) {
-        Db.storyMedia.child(story.id).child("data").get().addOnSuccessListener { snapshot ->
-            val data = snapshot.getValue(String::class.java).orEmpty()
-            if (!story.isVideo) return@addOnSuccessListener done(data, null)
-            worker.execute {
-                val file = File(File(context.cacheDir, "media").apply { mkdirs() }, "${story.id}.mp4")
-                if (!file.exists()) runCatching { file.writeBytes(Base64.decode(data, Base64.DEFAULT)) }
-                main.post { done(null, file.takeIf { it.exists() }) }
+        if (!story.isVideo) return done(story.media, null)
+        if (Images.isLocalFile(story.media)) return done(null, File(story.media))
+        val app = context.applicationContext
+        worker.execute {
+            val dir = File(app.cacheDir, "media").apply { mkdirs() }
+            val file = File(dir, sha1(story.media) + ".mp4")
+            if (!file.exists()) runCatching {
+                val connection = URL(story.media).openConnection() as HttpURLConnection
+                connection.connectTimeout = 8_000
+                connection.readTimeout = 60_000
+                val temp = File(dir, file.name + ".part")
+                connection.inputStream.use { input -> temp.outputStream().use { input.copyTo(it) } }
+                connection.disconnect()
+                temp.renameTo(file)
             }
-        }.addOnFailureListener { done(null, null) }
+            main.post { done(null, file.takeIf { it.exists() }) }
+        }
     }
+
+    // ---- close friends ----------------------------------------------------------------------
+
+    fun closeFriends(done: (Set<String>) -> Unit) {
+        LocalDb.cache("closeFriends")?.let { done(parseIds(JSONObject(it))) }
+        Api.get("stories/close_friends.php") { result ->
+            val json = result.json?.takeIf { result.ok } ?: return@get
+            LocalDb.putCache("closeFriends", json.toString())
+            done(parseIds(json))
+        }
+    }
+
+    fun setCloseFriend(uid: String, on: Boolean, done: (Set<String>) -> Unit) {
+        Api.post("stories/close_friends.php", mapOf("friendId" to uid, "on" to if (on) "1" else "0")) { result ->
+            val json = result.json?.takeIf { result.ok }
+            if (json == null) return@post
+            LocalDb.putCache("closeFriends", json.toString())
+            done(parseIds(json))
+        }
+    }
+
+    private fun parseIds(json: JSONObject): Set<String> =
+        json.optJSONArray("closeFriends")?.let { a -> (0 until a.length()).map { a.getString(it) }.toSet() }.orEmpty()
+
+    // ---- JSON <-> SQLite --------------------------------------------------------------------
+
+    private fun store(json: JSONObject) = json.toItem().let { LocalDb.putItem("stories", it.id, it.parent, it.sort, it.json) }
+
+    private fun JSONObject.toItem() = LocalDb.Item(optString("id"), optString("ownerId"), optLong("timestamp"), false, this)
+
+    private fun LocalDb.Item.toStory() = Story(
+        id = json.optString("id"), ownerId = json.optString("ownerId"), type = json.optString("type", Story.TYPE_IMAGE),
+        media = json.optString("media"), thumb = json.optString("thumb"), label = json.optString("label"),
+        labelStyle = json.optString("labelStyle", Story.LABEL_RED), labelX = json.optDouble("labelX", 0.1),
+        labelY = json.optDouble("labelY", 0.55), audience = json.optString("audience", Story.AUDIENCE_FRIENDS),
+        timestamp = json.optLong("timestamp"),
+        viewers = json.optJSONObject("viewers")?.let { v -> v.keys().asSequence().associateWith { v.optLong(it) } }.orEmpty(),
+        reactions = json.optJSONObject("reactions").toStringMap(), pending = pending,
+    )
+
+    private fun Story.toJson() = JSONObject()
+        .put("id", id).put("ownerId", ownerId).put("type", type).put("media", media).put("thumb", thumb)
+        .put("label", label).put("labelStyle", labelStyle).put("labelX", labelX).put("labelY", labelY)
+        .put("audience", audience).put("timestamp", timestamp)
+        .put("viewers", JSONObject(viewers as Map<*, *>)).put("reactions", JSONObject(reactions as Map<*, *>))
+
+    private fun sha1(text: String) =
+        MessageDigest.getInstance("SHA-1").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
 }

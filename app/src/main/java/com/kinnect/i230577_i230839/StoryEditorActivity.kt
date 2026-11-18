@@ -52,11 +52,9 @@ class StoryEditorActivity : BaseActivity() {
         }
         setupLabelDragging()
 
-        val me = Db.uid ?: return
-        watch.on(Db.user(me)) { snapshot ->
-            snapshot.getValue(User::class.java)?.let { Avatars.show(findViewById(R.id.share_avatar), it) }
-        }
-        watch.on(Db.closeFriends.child(me)) { closeFriendCount = it.childrenCount.toInt() }
+        val me = Session.uid ?: return
+        Users.load(me) { Avatars.show(findViewById(R.id.share_avatar), it) }
+        Stories.closeFriends { closeFriendCount = it.size }
     }
 
     private fun showMedia(uri: Uri) {

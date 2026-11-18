@@ -13,7 +13,7 @@ import android.widget.TextView
 class StoryViewerActivity : BaseActivity() {
 
     private val ownerUid by lazy { intent.getStringExtra(EXTRA_OWNER).orEmpty() }
-    private val watch = Watch()
+    private var storiesWatch: Watch? = null
     private lateinit var player: StoryPlayer
     private var all = listOf<Story>()
     private var isCloseFriend = false
@@ -23,7 +23,7 @@ class StoryViewerActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_story_viewer)
-        val me = Db.uid
+        val me = Session.uid
         if (ownerUid.isEmpty() || me == null) { finish(); return }
 
         player = StoryPlayer(this, onShow = { _, story -> showMeta(story) }, onFinished = { finish() })
@@ -51,19 +51,21 @@ class StoryViewerActivity : BaseActivity() {
             Avatars.show(findViewById(R.id.story_owner_avatar), owner)
             findViewById<TextView>(R.id.story_owner_name).text = owner.fullName
         }
-        watch.on(Db.closeFriends.child(ownerUid).child(me)) {
-            isCloseFriend = it.exists()
-            refresh()
-        }
-        watch.on(Db.stories.child(ownerUid)) { snapshot ->
-            all = snapshot.children.mapNotNull { it.getValue(Story::class.java)?.copy(id = it.key.orEmpty(), ownerId = ownerUid) }
+        // The server only returns stories I'm allowed to see (24 hours, close friends)
+        isCloseFriend = true
+        storiesWatch = Stories.watch { all = Stories.cachedFor(ownerUid); refresh() }
+        all = Stories.cachedFor(ownerUid)
+        storiesLoaded = all.isNotEmpty()
+        if (storiesLoaded) refresh()
+        Stories.refresh {
+            all = Stories.cachedFor(ownerUid)
             storiesLoaded = true
             refresh()
         }
     }
 
     private fun refresh() {
-        val me = Db.uid ?: return
+        val me = Session.uid ?: return
         // The close-friends answer can arrive before the stories; wait for the stories themselves
         if (!storiesLoaded) return
         val visible = Stories.visible(all, me, isCloseFriend)
@@ -105,7 +107,7 @@ class StoryViewerActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        watch.stop()
+        storiesWatch?.stop()
         if (::player.isInitialized) player.stop()
         super.onDestroy()
     }
