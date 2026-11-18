@@ -13,7 +13,6 @@ import android.widget.TextView
 class ReactionPickerActivity : BaseActivity() {
 
     private val postId by lazy { intent.getStringExtra(EXTRA_POST_ID).orEmpty() }
-    private val watch = Watch()
     private var post: Post? = null
 
     private val buttons by lazy {
@@ -27,7 +26,7 @@ class ReactionPickerActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reaction_picker)
-        if (postId.isEmpty() || Db.uid == null) { finish(); return }
+        if (postId.isEmpty() || Session.uid == null) { finish(); return }
 
         tapCloses(R.id.scrim, R.id.btn_back)
         buttons.forEach { (reaction, button) ->
@@ -37,15 +36,13 @@ class ReactionPickerActivity : BaseActivity() {
             }
         }
 
-        watch.on(Db.posts.child(postId)) { snapshot ->
-            val loaded = snapshot.getValue(Post::class.java)?.copy(id = postId) ?: run { finish(); return@on }
+        Posts.load(postId) { loaded ->
+            if (loaded == null) { finish(); return@load }
             post = loaded
             showPost(loaded)
         }
-        watch.on(Db.comments.child(postId).orderByChild("timestamp").limitToFirst(1)) { snapshot ->
-            val first = snapshot.children.firstOrNull()?.getValue(Comment::class.java)
-            showFirstComment(first)
-        }
+        showFirstComment(Posts.cachedComments(postId).firstOrNull())
+        Posts.refreshComments(postId) { showFirstComment(Posts.cachedComments(postId).firstOrNull()) }
     }
 
     private fun showPost(post: Post) {
@@ -61,7 +58,7 @@ class ReactionPickerActivity : BaseActivity() {
         }
         val photo = findViewById<ImageView>(R.id.post_photo)
         photo.visibility = if (post.imageCount == 0) View.GONE else View.VISIBLE
-        PostImages.get(post.id) { images -> images.firstOrNull()?.let { Images.show(photo, it) } }
+        post.images.firstOrNull()?.let { Images.show(photo, it) }
 
         val top = Reaction.top(post.reactions)
         listOf(R.id.reaction_stack_1, R.id.reaction_stack_2, R.id.reaction_stack_3).forEachIndexed { i, id ->
@@ -71,7 +68,7 @@ class ReactionPickerActivity : BaseActivity() {
         }
         findViewById<TextView>(R.id.post_reaction_text).text = Posts.reactionSummary(post, UserCache.names())
         findViewById<TextView>(R.id.post_comment_count).text = Posts.commentsLine(post)
-        highlight(Reaction.of(post.reactions[Db.uid]))
+        highlight(Reaction.of(post.reactions[Session.uid]))
     }
 
     /** Lifts and enlarges your current reaction and puts its name in the tooltip above it. */
@@ -108,11 +105,6 @@ class ReactionPickerActivity : BaseActivity() {
     }
 
     private fun dp(value: Float) = value * resources.displayMetrics.density
-
-    override fun onDestroy() {
-        watch.stop()
-        super.onDestroy()
-    }
 
     companion object {
         const val EXTRA_POST_ID = "postId"

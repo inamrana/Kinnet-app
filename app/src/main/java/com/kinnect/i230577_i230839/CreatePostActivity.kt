@@ -24,7 +24,8 @@ import java.util.concurrent.Executors
 
 /**
  * 07 · Create post — text plus one or more photos (from the Photo picker or the camera),
- * or a text-only post on one of the coloured backgrounds. "Post" saves it to Firebase.
+ * or a text-only post on one of the coloured backgrounds. "Post" uploads it through
+ * posts/create.php — offline it is queued, shown in the feed as "Sending…" and synced later.
  */
 class CreatePostActivity : BaseActivity() {
 
@@ -35,7 +36,6 @@ class CreatePostActivity : BaseActivity() {
     private var cameraFile: Uri? = null
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
-    private val watch = Watch()
 
     private val pickPhotos = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode != Activity.RESULT_OK) return@registerForActivityResult
@@ -69,9 +69,8 @@ class CreatePostActivity : BaseActivity() {
         }
         setupSwatches()
 
-        Db.me()?.let { ref ->
-            watch.on(ref) { snapshot ->
-                val user = snapshot.getValue(User::class.java) ?: return@on
+        Session.uid?.let { me ->
+            Users.load(me) { user ->
                 findViewById<TextView>(R.id.create_name).text = user.fullName
                 Avatars.show(findViewById(R.id.create_avatar), user)
                 input.hint = "What's on your mind, ${user.firstName.ifEmpty { user.fullName }}?"
@@ -151,32 +150,20 @@ class CreatePostActivity : BaseActivity() {
         val button = findViewById<Button>(R.id.btn_post)
         button.isEnabled = false
         button.text = "Posting…"
-        val uris = photos.toList()
-        worker.execute {
-            val encoded = uris.mapNotNull { Images.encode(this, it, POST_IMAGE_SIZE) }
-            main.post {
-                Posts.create(text, encoded, bgColor) { ok ->
-                    if (ok) {
-                        toast("Posted")
-                        finish()
-                    } else {
-                        button.isEnabled = true
-                        button.text = "Post"
-                        toast("Could not post. Check your connection.")
-                    }
-                }
+        Posts.create(this, text, photos.toList(), bgColor) { ok ->
+            if (ok) {
+                toast("Posted")
+                finish()
+            } else {
+                button.isEnabled = true
+                button.text = "Post"
+                toast("Could not read one of the photos")
             }
         }
     }
 
-    override fun onDestroy() {
-        watch.stop()
-        super.onDestroy()
-    }
-
     private companion object {
         const val MAX_PHOTOS = 10
-        const val POST_IMAGE_SIZE = 1080
         /** Same colours as the swatches in the design, left to right. */
         val SWATCHES = listOf("#0B5F63", "#BF4B2B", "#4D5293", "#2F6B4C", "#CC8A12", "#7B4F80", "#1C1B1A")
     }

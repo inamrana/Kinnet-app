@@ -20,16 +20,17 @@ import androidx.core.text.HtmlCompat
 /**
  * 06 · Comments — live comments on a post. Replies sit under their comment with the curved
  * connector, comments can be liked, and a comment can carry a photo. "Replying to … / Cancel"
- * shows while answering someone.
+ * shows while answering someone. Comments come from comments/list.php (cached in SQLite); new
+ * comments, replies and likes are queued so they also work offline ("Sending…" until synced).
  */
 class CommentsActivity : BaseActivity() {
 
     private val postId by lazy { intent.getStringExtra(EXTRA_POST_ID).orEmpty() }
-    private val watch = Watch()
+    private var postsWatch: Watch? = null
     private var post: Post? = null
     private var comments = listOf<Comment>()
     private var replyTarget: Comment? = null
-    private var photo = ""
+    private var photo: android.net.Uri? = null
     private var firstLoad = true
 
     private lateinit var list: LinearLayout
@@ -38,29 +39,29 @@ class CommentsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_comments)
-        if (postId.isEmpty() || Db.uid == null) { finish(); return }
+        if (postId.isEmpty() || Session.uid == null) { finish(); return }
 
         list = findViewById(R.id.comments_list)
         input = findViewById(R.id.input_comment)
         tapCloses(R.id.btn_back)
         onTap(R.id.reply_cancel) { setReplyTarget(null) }
         onTap(R.id.btn_send_comment) { send() }
-        onTap(R.id.btn_comment_photo) { pickImage { attachPhoto(it) } }
-        onTap(R.id.comment_photo_remove) { attachPhoto("") }
+        onTap(R.id.btn_comment_photo) { pickImageUri { attachPhoto(it) } }
+        onTap(R.id.comment_photo_remove) { attachPhoto(null) }
         onTap(R.id.comments_reactions) {
             startActivity(Intent(this, ReactionPickerActivity::class.java).putExtra(ReactionPickerActivity.EXTRA_POST_ID, postId))
         }
 
-        watch.on(Db.posts.child(postId)) { snapshot ->
-            post = snapshot.getValue(Post::class.java)?.copy(id = postId)
-            post?.let(::showReactions)
-        }
-        watch.on(Db.comments.child(postId).orderByChild("timestamp")) { snapshot ->
-            comments = snapshot.children.mapNotNull { child ->
-                child.getValue(Comment::class.java)?.copy(id = child.key.orEmpty())
-            }
-            showComments()
-        }
+        postsWatch = Posts.watch { showLocal() }
+        Posts.load(postId) { loaded -> post = loaded; loaded?.let(::showReactions) }
+        showLocal()
+        Posts.refreshComments(postId) { ok -> if (ok) showLocal() }
+    }
+
+    private fun showLocal() {
+        Posts.cached(postId)?.let { post = it; showReactions(it) }
+        comments = Posts.cachedComments(postId)
+        showComments()
     }
 
     private fun showReactions(post: Post) {
@@ -93,7 +94,7 @@ class CommentsActivity : BaseActivity() {
 
     private fun row(comment: Comment, isReply: Boolean): View {
         val view = LayoutInflater.from(this).inflate(R.layout.item_comment, list, false)
-        val me = Db.uid.orEmpty()
+        val me = Session.uid.orEmpty()
         val avatar = view.findViewById<TextView>(R.id.comment_avatar)
         if (isReply) {
             view.setPadding(dp(33), view.paddingTop, view.paddingRight, view.paddingBottom)
@@ -127,10 +128,10 @@ class CommentsActivity : BaseActivity() {
                 bottomMargin = dp(10)
             }
         }
-        view.findViewById<TextView>(R.id.comment_time).text = TimeAgo.short(comment.timestamp)
+        view.findViewById<TextView>(R.id.comment_time).text = if (comment.pending) "Sending…" else TimeAgo.short(comment.timestamp)
         view.findViewById<TextView>(R.id.comment_like).apply {
             setTextColor(ContextCompat.getColor(context, if (comment.likes.containsKey(me)) R.color.teal else R.color.text_secondary))
-            setOnClickListener { Posts.toggleCommentLike(postId, comment) }
+            setOnClickListener { Posts.toggleCommentLike(comment) }
         }
         view.findViewById<View>(R.id.comment_reply).setOnClickListener { setReplyTarget(comment) }
         return view
@@ -166,30 +167,30 @@ class CommentsActivity : BaseActivity() {
             ?.showSoftInput(input, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
     }
 
-    private fun attachPhoto(encoded: String) {
-        photo = encoded
+    private fun attachPhoto(uri: android.net.Uri?) {
+        photo = uri
         val preview = findViewById<View>(R.id.comment_photo_preview)
-        preview.visibility = if (encoded.isEmpty()) View.GONE else View.VISIBLE
-        if (encoded.isNotEmpty()) Images.show(findViewById(R.id.comment_photo_image), encoded)
+        preview.visibility = if (uri == null) View.GONE else View.VISIBLE
+        if (uri != null) findViewById<ImageView>(R.id.comment_photo_image).setImageURI(uri)
     }
 
     private fun send() {
         val current = post ?: return
         val text = input.text.toString().trim()
-        if (text.isEmpty() && photo.isEmpty()) return
+        if (text.isEmpty() && photo == null) return
         val target = replyTarget
         // Replying to a reply mentions that person, like "@Lina Marsh" in the design
         val mention = if (target != null && target.parentId.isNotEmpty()) UserCache.peek(target.authorId)?.fullName.orEmpty() else ""
-        Posts.addComment(current, text, photo, target, mention)
+        Posts.addComment(this, current, text, photo, target, mention)
         input.setText("")
-        attachPhoto("")
+        attachPhoto(null)
         setReplyTarget(null)
     }
 
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() {
-        watch.stop()
+        postsWatch?.stop()
         super.onDestroy()
     }
 

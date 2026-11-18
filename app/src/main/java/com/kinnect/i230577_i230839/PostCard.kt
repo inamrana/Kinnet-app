@@ -42,18 +42,10 @@ object UserCache {
     fun names(): Map<String, String> = users.mapValues { it.value.firstName.ifEmpty { it.value.fullName } }
 }
 
-/** Photos of posts, loaded once per post from postImages/{postId}. */
+/** Photos of a post (URLs from the server, cached with the post in SQLite). */
 object PostImages {
-    private val loaded = hashMapOf<String, List<String>>()
-
     fun get(postId: String, done: (List<String>) -> Unit) {
-        loaded[postId]?.let { done(it); return }
-        Db.postImages.child(postId).get().addOnSuccessListener { snapshot ->
-            val images = snapshot.children.sortedBy { it.key?.toIntOrNull() ?: 0 }
-                .mapNotNull { it.getValue(String::class.java) }
-            loaded[postId] = images
-            done(images)
-        }
+        Posts.load(postId) { post -> post?.let { done(it.images) } }
     }
 }
 
@@ -68,7 +60,10 @@ object PostCard {
             Avatars.show(view.findViewById(R.id.post_avatar), author)
             view.findViewById<TextView>(R.id.post_author).text = author.fullName
         }
-        view.findViewById<TextView>(R.id.post_time).text = "${TimeAgo.short(post.timestamp)} · "
+        // Created offline and not on the server yet: "Sending…" until it syncs
+        view.findViewById<TextView>(R.id.post_time).text =
+            if (post.pending) "Sending… · " else "${TimeAgo.short(post.timestamp)} · "
+        view.alpha = if (post.pending) 0.75f else 1f
         val openAuthor = View.OnClickListener { PersonRow.openProfile(view, post.authorId) }
         view.findViewById<View>(R.id.post_avatar).setOnClickListener(openAuthor)
         view.findViewById<View>(R.id.post_author_block).setOnClickListener(openAuthor)
@@ -122,14 +117,9 @@ object PostCard {
             visibility = if (post.imageCount > 3) View.VISIBLE else View.GONE
             text = "+${post.imageCount - 3}"
         }
-        val tag = post.id
-        grid.tag = tag
-        PostImages.get(post.id) { images ->
-            if (grid.tag != tag) return@get
-            images.getOrNull(0)?.let { Images.show(a, it) }
-            images.getOrNull(1)?.let { Images.show(b, it) }
-            images.getOrNull(2)?.let { Images.show(c, it) }
-        }
+        post.images.getOrNull(0)?.let { Images.show(a, it) }
+        post.images.getOrNull(1)?.let { Images.show(b, it) }
+        post.images.getOrNull(2)?.let { Images.show(c, it) }
     }
 
     private fun bindReactions(view: View, post: Post, me: String) {
